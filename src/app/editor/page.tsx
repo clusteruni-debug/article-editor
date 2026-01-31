@@ -31,6 +31,11 @@ function EditorContent() {
   const insightKeyword = searchParams.get('keyword');
   const insightSummary = searchParams.get('summary');
 
+  // AI 생성 콘텐츠
+  const aiTitle = searchParams.get('aiTitle');
+  const aiContent = searchParams.get('aiContent');
+  const aiTags = searchParams.get('aiTags');
+
   const [articleId] = useState(() => nanoid());
   const [savedArticleId, setSavedArticleId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -41,12 +46,41 @@ function EditorContent() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  // 인사이트에서 시작한 경우 제목 초기화
+  // 인사이트/AI에서 시작한 경우 초기화
   useEffect(() => {
-    if (insightKeyword && !title) {
+    // AI 생성 콘텐츠가 있으면 우선 사용
+    if (aiTitle) {
+      setTitle(aiTitle);
+    } else if (insightKeyword && !title) {
       setTitle(insightKeyword);
     }
-  }, [insightKeyword]);
+
+    // AI 생성 본문
+    if (aiContent && editorRef.current) {
+      // 마크다운을 HTML로 변환 후 에디터에 삽입
+      const htmlContent = markdownToHtml(aiContent);
+      editorRef.current.setContent(htmlContent);
+    }
+
+    // AI 생성 태그
+    if (aiTags) {
+      setTags(aiTags.split(',').filter(Boolean));
+    }
+  }, [aiTitle, aiContent, aiTags, insightKeyword]);
+
+  // 마크다운을 간단한 HTML로 변환
+  const markdownToHtml = (md: string): string => {
+    return md
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/^(.+)$/gim, '<p>$1</p>')
+      .replace(/<p><h/g, '<h')
+      .replace(/<\/h(\d)><\/p>/g, '</h$1>');
+  };
 
   const extractTextContent = useCallback((json: JSONContent): string => {
     let text = '';

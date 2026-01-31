@@ -32,6 +32,7 @@ export default function InsightsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingInsight, setEditingInsight] = useState<InsightWithArticle | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadInsights();
@@ -128,6 +129,44 @@ export default function InsightsPage() {
       params.set('summary', insight.summary);
     }
     router.push(`/editor?${params.toString()}`);
+  };
+
+  const handleGenerateAI = async (insight: InsightWithArticle) => {
+    setGeneratingId(insight.id);
+    try {
+      const response = await fetch('/api/generate-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keyword: insight.keyword,
+          summary: insight.summary,
+          actionType: insight.action_type,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate draft');
+      }
+
+      const draft = await response.json();
+
+      // 에디터로 이동하면서 AI 생성 내용 전달
+      const params = new URLSearchParams({
+        insightId: insight.id,
+        keyword: insight.keyword,
+        aiTitle: draft.title,
+        aiContent: draft.content,
+        aiTags: draft.tags.join(','),
+      });
+
+      showSuccess('AI 초안이 생성되었습니다');
+      router.push(`/editor?${params.toString()}`);
+    } catch (error) {
+      console.error('AI generation error:', error);
+      showError('AI 초안 생성에 실패했습니다');
+    } finally {
+      setGeneratingId(null);
+    }
   };
 
   const handleCloseForm = () => {
@@ -316,6 +355,8 @@ export default function InsightsPage() {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onStartArticle={handleStartArticle}
+                onGenerateAI={handleGenerateAI}
+                isGenerating={generatingId === insight.id}
               />
             ))}
           </div>

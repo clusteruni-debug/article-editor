@@ -18,6 +18,7 @@ interface TiptapEditorProps {
 export interface TiptapEditorRef {
   getHTML: () => string;
   getText: () => string;
+  setContent: (html: string) => void;
 }
 
 export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
@@ -65,6 +66,11 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
     useImperativeHandle(ref, () => ({
       getHTML: () => editor?.getHTML() || '',
       getText: () => editor?.getText() || '',
+      setContent: (html: string) => {
+        if (editor) {
+          editor.commands.setContent(html);
+        }
+      },
     }), [editor]);
 
     // 기존 글 로드 시 콘텐츠 설정 (한 번만)
