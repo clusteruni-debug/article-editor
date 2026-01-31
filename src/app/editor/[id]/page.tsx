@@ -7,10 +7,13 @@ import { TiptapEditor, TiptapEditorRef } from '@/components/editor/TiptapEditor'
 import { TitleInput } from '@/components/editor/TitleInput';
 import { TagInput } from '@/components/editor/TagInput';
 import { EditorSettings } from '@/components/editor/EditorSettings';
+import { SpellChecker } from '@/components/editor/SpellChecker';
+import { VersionHistory } from '@/components/editor/VersionHistory';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useArticle } from '@/hooks/useArticle';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { exportAsJSON, exportAsMarkdown, exportAsHTML } from '@/lib/utils/export';
 
 export default function EditArticlePage() {
@@ -76,6 +79,45 @@ export default function EditArticlePage() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  // 키보드 단축키
+  useKeyboardShortcuts([
+    {
+      key: 's',
+      ctrl: true,
+      handler: () => {
+        if (!saving && !loading && title.trim()) {
+          handleSave('draft');
+        }
+      },
+      description: '임시저장',
+    },
+    {
+      key: 'p',
+      ctrl: true,
+      shift: true,
+      handler: () => {
+        if (!saving && !loading && title.trim()) {
+          handleSave('published');
+        }
+      },
+      description: '발행',
+    },
+    {
+      key: ',',
+      ctrl: true,
+      handler: () => setShowSettings(prev => !prev),
+      description: '설정',
+    },
+    {
+      key: 'Escape',
+      handler: () => {
+        setShowExportMenu(false);
+        setShowSettings(false);
+      },
+      description: '메뉴 닫기',
+    },
+  ]);
 
   // 아티클 로드
   useEffect(() => {
@@ -181,7 +223,7 @@ export default function EditArticlePage() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3">
             {/* 자동 저장 상태 표시 */}
             {isAutoSaving ? (
               <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -195,6 +237,34 @@ export default function EditArticlePage() {
             ) : null}
 
             {(saving || loading) && <LoadingSpinner size="sm" />}
+
+            {/* 맞춤법 검사 */}
+            <SpellChecker
+              getText={() => editorRef.current?.getText() || ''}
+              onReplace={(original, replacement) => {
+                if (editorRef.current) {
+                  const html = editorRef.current.getHTML();
+                  const newHtml = html.replace(new RegExp(original, 'g'), replacement);
+                  editorRef.current.setContent(newHtml);
+                }
+              }}
+            />
+
+            {/* 버전 히스토리 */}
+            <VersionHistory
+              articleId={articleId}
+              currentTitle={title}
+              currentContent={content}
+              onRestore={(restoredTitle, restoredContent) => {
+                setTitle(restoredTitle);
+                setContent(restoredContent);
+                if (editorRef.current) {
+                  editorRef.current.setContent(
+                    restoredContent.content ? JSON.stringify(restoredContent) : ''
+                  );
+                }
+              }}
+            />
 
             {/* 설정 버튼 */}
             <Button
@@ -211,35 +281,37 @@ export default function EditArticlePage() {
             <Button
               variant="ghost"
               onClick={handleCopy}
+              title="복사"
             >
               {copied ? (
                 <span className="flex items-center gap-1 text-green-600">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  복사됨
+                  <span className="hidden sm:inline">복사됨</span>
                 </span>
               ) : (
                 <span className="flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
-                  복사
+                  <span className="hidden sm:inline">복사</span>
                 </span>
               )}
             </Button>
 
             {/* 내보내기 메뉴 */}
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <Button
                 variant="ghost"
                 onClick={() => setShowExportMenu(!showExportMenu)}
+                title="내보내기"
               >
                 <span className="flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  내보내기
+                  <span className="hidden md:inline">내보내기</span>
                 </span>
               </Button>
               {showExportMenu && (
@@ -271,13 +343,15 @@ export default function EditArticlePage() {
               onClick={() => handleSave('draft')}
               disabled={saving || loading}
             >
-              임시저장
+              <span className="hidden sm:inline">임시저장</span>
+              <span className="sm:hidden">저장</span>
             </Button>
             <Button
               onClick={() => handleSave('published')}
               disabled={saving || loading}
             >
-              발행하기
+              <span className="hidden sm:inline">발행하기</span>
+              <span className="sm:hidden">발행</span>
             </Button>
           </div>
         </div>

@@ -26,18 +26,18 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       onClick={onClick}
       title={title}
       className={cn(
-        'p-2 rounded hover:bg-gray-100 transition-colors',
-        isActive && 'bg-gray-100 text-black'
+        'p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center',
+        isActive && 'bg-gray-100 dark:bg-gray-700 text-black dark:text-white'
       )}
     >
       {children}
     </button>
   );
 
-  const Divider = () => <div className="w-px h-6 bg-gray-200 mx-2" />;
+  const Divider = () => <div className="w-px h-6 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2 hidden sm:block" />;
 
   return (
-    <div className="flex items-center gap-1 border-b border-gray-200 pb-3 mb-6 flex-wrap">
+    <div className="flex items-center gap-0.5 sm:gap-1 border-b border-gray-200 dark:border-gray-700 pb-3 mb-6 overflow-x-auto scrollbar-hide">
       {/* 텍스트 서식 */}
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
