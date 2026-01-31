@@ -20,6 +20,7 @@ interface ArticleRow {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  deleted_at: string | null;
 }
 
 function toArticle(row: ArticleRow): Article {
@@ -38,6 +39,7 @@ function toArticle(row: ArticleRow): Article {
     created_at: row.created_at,
     updated_at: row.updated_at,
     published_at: row.published_at ?? undefined,
+    deleted_at: row.deleted_at ?? undefined,
   };
 }
 
@@ -170,6 +172,7 @@ export function useArticle() {
       const { data: articles, error: err } = await supabase
         .from('articles')
         .select()
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (err) {
@@ -189,8 +192,97 @@ export function useArticle() {
     }
   }, [supabase]);
 
+  // 휴지통 목록 조회
+  const getDeletedArticles = useCallback(async (): Promise<Article[]> => {
+    console.log('[INFO] 휴지통 목록 조회');
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data: articles, error: err } = await supabase
+        .from('articles')
+        .select()
+        .not('deleted_at', 'is', null)
+        .order('deleted_at', { ascending: false });
+
+      if (err) {
+        console.error('[ERROR] Supabase 에러:', err);
+        throw err;
+      }
+
+      console.log('[SUCCESS] 휴지통 목록 조회 완료:', articles?.length || 0, '개');
+      return (articles as ArticleRow[] || []).map(toArticle);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '휴지통 조회 실패';
+      console.error('[ERROR] 휴지통 조회 실패:', message);
+      setError(message);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
+
+  // 휴지통으로 이동 (soft delete)
   const deleteArticle = useCallback(async (id: string): Promise<boolean> => {
-    console.log('[INFO] 아티클 삭제:', id);
+    console.log('[INFO] 아티클 휴지통 이동:', id);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error: err } = await supabase
+        .from('articles')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (err) {
+        console.error('[ERROR] Supabase 에러:', err);
+        throw err;
+      }
+
+      console.log('[SUCCESS] 아티클 휴지통 이동 완료');
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '삭제 실패';
+      console.error('[ERROR] 아티클 삭제 실패:', message);
+      setError(message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
+
+  // 휴지통에서 복원
+  const restoreArticle = useCallback(async (id: string): Promise<boolean> => {
+    console.log('[INFO] 아티클 복원:', id);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error: err } = await supabase
+        .from('articles')
+        .update({ deleted_at: null })
+        .eq('id', id);
+
+      if (err) {
+        console.error('[ERROR] Supabase 에러:', err);
+        throw err;
+      }
+
+      console.log('[SUCCESS] 아티클 복원 완료');
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '복원 실패';
+      console.error('[ERROR] 아티클 복원 실패:', message);
+      setError(message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
+
+  // 영구 삭제
+  const permanentlyDeleteArticle = useCallback(async (id: string): Promise<boolean> => {
+    console.log('[INFO] 아티클 영구 삭제:', id);
     setLoading(true);
     setError(null);
 
@@ -205,11 +297,11 @@ export function useArticle() {
         throw err;
       }
 
-      console.log('[SUCCESS] 아티클 삭제 완료');
+      console.log('[SUCCESS] 아티클 영구 삭제 완료');
       return true;
     } catch (err) {
-      const message = err instanceof Error ? err.message : '아티클 삭제 실패';
-      console.error('[ERROR] 아티클 삭제 실패:', message);
+      const message = err instanceof Error ? err.message : '영구 삭제 실패';
+      console.error('[ERROR] 아티클 영구 삭제 실패:', message);
       setError(message);
       return false;
     } finally {
@@ -224,6 +316,9 @@ export function useArticle() {
     updateArticle,
     getArticle,
     getArticles,
+    getDeletedArticles,
     deleteArticle,
+    restoreArticle,
+    permanentlyDeleteArticle,
   };
 }

@@ -15,6 +15,7 @@ export interface Article {
   created_at: string;
   updated_at: string;
   published_at?: string;
+  deleted_at?: string;
 }
 
 export interface ArticleInsert {

@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/insights', label: 'Insights', icon: '💡' },
   { href: '/series', label: 'Series', icon: '📚' },
   { href: '/dashboard', label: 'Dashboard', icon: '📊' },
+  { href: '/trash', label: 'Trash', icon: '🗑️' },
 ];
 
 export function GlobalNav() {
