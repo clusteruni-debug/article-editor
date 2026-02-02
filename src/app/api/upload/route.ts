@@ -7,6 +7,14 @@ const BUCKET_NAME = 'article-images';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
+// 🔐 MIME 타입에서 안전한 확장자 결정
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+};
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -55,10 +63,12 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    // 파일 업로드
-    const fileExt = file.name.split('.').pop() || 'png';
+    // 파일 업로드 - MIME 타입에서 확장자 결정 (파일명 조작 방지)
+    const fileExt = MIME_TO_EXT[file.type] || 'jpg';
     const fileName = `${nanoid()}.${fileExt}`;
-    const filePath = articleId ? `${articleId}/${fileName}` : fileName;
+    // articleId 검증 (경로 탐색 공격 방지)
+    const safeArticleId = articleId?.replace(/[^a-zA-Z0-9-_]/g, '') || '';
+    const filePath = safeArticleId ? `${safeArticleId}/${fileName}` : fileName;
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
@@ -72,9 +82,12 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
+      // 프로덕션에서는 상세 에러 숨기기
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Upload error:', uploadError);
+      }
       return NextResponse.json(
-        { error: `업로드 실패: ${uploadError.message}` },
+        { error: '업로드 실패. 잠시 후 다시 시도해주세요.' },
         { status: 500 }
       );
     }
@@ -86,7 +99,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: publicUrl });
   } catch (error) {
-    console.error('Server error:', error);
+    // 프로덕션에서는 상세 에러 숨기기
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Server error:', error);
+    }
     return NextResponse.json(
       { error: '서버 오류가 발생했습니다.' },
       { status: 500 }
