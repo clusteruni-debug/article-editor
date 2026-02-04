@@ -182,7 +182,7 @@ export default function HomePage() {
           {/* 검색 + 정렬 + 뷰 모드 */}
           <div className="flex items-center gap-3">
             {/* 검색 입력 */}
-            <div className="flex-1 max-w-lg mx-auto relative">
+            <div className="relative flex-1">
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
                 fill="none"
