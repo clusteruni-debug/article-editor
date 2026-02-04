@@ -295,6 +295,36 @@ export function useArticle() {
     }
   }, [supabase]);
 
+  // 상태별 카운트 조회 (필터 UI용)
+  const getStatusCounts = useCallback(async (): Promise<{ total: number; draft: number; published: number }> => {
+    try {
+      const { count: total } = await supabase
+        .from('articles')
+        .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null);
+
+      const { count: draft } = await supabase
+        .from('articles')
+        .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null)
+        .eq('status', 'draft');
+
+      const { count: published } = await supabase
+        .from('articles')
+        .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null)
+        .eq('status', 'published');
+
+      return {
+        total: total ?? 0,
+        draft: draft ?? 0,
+        published: published ?? 0,
+      };
+    } catch {
+      return { total: 0, draft: 0, published: 0 };
+    }
+  }, [supabase]);
+
   // 전체 태그 목록 조회 (필터 UI용, 페이지네이션과 별도)
   const getAllTags = useCallback(async (): Promise<string[]> => {
     try {
@@ -441,6 +471,7 @@ export function useArticle() {
     getArticle,
     getArticles,
     getArticlesPaginated,
+    getStatusCounts,
     getAllTags,
     getDeletedArticles,
     deleteArticle,

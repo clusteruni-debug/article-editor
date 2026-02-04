@@ -36,7 +36,7 @@ const STATUS_LABELS: Record<StatusFilter, string> = {
 export default function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { getArticlesPaginated, getAllTags, deleteArticle, loading } = useArticle();
+  const { getArticlesPaginated, getStatusCounts, getAllTags, deleteArticle, loading } = useArticle();
   const { success: showSuccess, error: showError } = useToast();
 
   // URL 파라미터에서 초기값 복원
@@ -66,6 +66,7 @@ export default function HomePage() {
     currentPage: 1,
   });
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [statusCounts, setStatusCounts] = useState({ total: 0, draft: 0, published: 0 });
   const [allArticlesForRecycle, setAllArticlesForRecycle] = useState<Article[]>([]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -124,10 +125,11 @@ export default function HomePage() {
     loadArticles();
   }, [loadArticles]);
 
-  // 태그 목록 (한 번만)
+  // 태그 목록 + 상태별 카운트 (한 번만)
   useEffect(() => {
     getAllTags().then(setAllTags);
-  }, [getAllTags]);
+    getStatusCounts().then(setStatusCounts);
+  }, [getAllTags, getStatusCounts]);
 
   // RecycleSuggestions용: 필터 없을 때만 전체 아티클 불러오기 (별도 경량 쿼리)
   useEffect(() => {
@@ -148,8 +150,9 @@ export default function HomePage() {
       } else {
         loadArticles();
       }
-      // 태그 목록도 갱신
+      // 태그 목록 + 카운트 갱신
       getAllTags().then(setAllTags);
+      getStatusCounts().then(setStatusCounts);
     } else {
       showError('삭제에 실패했습니다');
     }
@@ -245,20 +248,37 @@ export default function HomePage() {
 
         {/* 상태 필터 + 태그 필터 */}
         <div className="max-w-4xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto">
-          {/* 상태 필터 */}
-          {Object.entries(STATUS_LABELS).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => handleStatusChange(key as StatusFilter)}
-              className={`px-3 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
-                statusFilter === key
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+          {/* 상태 필터 (카운트 포함) */}
+          <button
+            onClick={() => handleStatusChange('all')}
+            className={`px-3 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
+              statusFilter === 'all'
+                ? 'bg-gray-900 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            전체 {statusCounts.total}
+          </button>
+          <button
+            onClick={() => handleStatusChange('draft')}
+            className={`px-3 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
+              statusFilter === 'draft'
+                ? 'bg-yellow-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            임시저장 {statusCounts.draft}
+          </button>
+          <button
+            onClick={() => handleStatusChange('published')}
+            className={`px-3 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
+              statusFilter === 'published'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            발행됨 {statusCounts.published}
+          </button>
 
           {/* 구분선 */}
           {allTags.length > 0 && (
