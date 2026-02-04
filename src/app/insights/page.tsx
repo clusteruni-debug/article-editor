@@ -280,7 +280,7 @@ export default function InsightsPage() {
     <div className="min-h-screen bg-white">
       {/* 헤더 */}
       <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-4 py-4">
           {/* 상단 */}
           <div className="flex items-center justify-between gap-4 mb-4">
             <h1 className="text-xl font-bold">Insights</h1>
@@ -497,7 +497,7 @@ export default function InsightsPage() {
       </header>
 
       {/* 인사이트 목록 */}
-      <main className="max-w-4xl mx-auto">
+      <main className="max-w-6xl mx-auto">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <LoadingSpinner size="lg" />

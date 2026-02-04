@@ -178,7 +178,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       {/* 검색 및 필터 바 */}
       <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 py-3">
+        <div className="max-w-6xl mx-auto px-4 py-3">
           {/* 검색 + 정렬 + 뷰 모드 */}
           <div className="flex items-center gap-3">
             {/* 검색 입력 */}
@@ -247,7 +247,7 @@ export default function HomePage() {
         </div>
 
         {/* 상태 필터 */}
-        <div className="max-w-4xl mx-auto px-4 pb-2 flex items-center gap-1 overflow-x-auto">
+        <div className="max-w-6xl mx-auto px-4 pb-2 flex items-center gap-1 overflow-x-auto">
           <button
             onClick={() => handleStatusChange('all')}
             className={`px-2.5 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
@@ -282,7 +282,7 @@ export default function HomePage() {
 
         {/* 태그 필터 */}
         {allTags.length > 0 && (
-          <div className="max-w-4xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto">
+          <div className="max-w-6xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto">
             <span className="text-xs text-gray-400 flex-shrink-0">태그:</span>
             {allTags.map((tag) => (
               <button
@@ -302,7 +302,7 @@ export default function HomePage() {
       </header>
 
       {/* 아티클 목록 */}
-      <main className="max-w-4xl mx-auto px-4">
+      <main className="max-w-6xl mx-auto px-4">
         {/* 재활용 제안 (필터 없을 때만) */}
         {!loading && allArticlesForRecycle.length > 0 && !debouncedSearch && !selectedTag && statusFilter === 'all' && (
           <div className="py-4">
