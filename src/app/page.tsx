@@ -246,60 +246,59 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 상태 필터 + 태그 필터 */}
-        <div className="max-w-4xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto">
-          {/* 상태 필터 (카운트 포함) */}
+        {/* 상태 필터 */}
+        <div className="max-w-4xl mx-auto px-4 pb-2 flex items-center gap-1 overflow-x-auto">
           <button
             onClick={() => handleStatusChange('all')}
-            className={`px-3 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
+            className={`px-2.5 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
               statusFilter === 'all'
                 ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'text-gray-500 hover:bg-gray-100'
             }`}
           >
             전체 {statusCounts.total}
           </button>
           <button
             onClick={() => handleStatusChange('draft')}
-            className={`px-3 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
+            className={`px-2.5 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
               statusFilter === 'draft'
                 ? 'bg-yellow-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'text-gray-500 hover:bg-gray-100'
             }`}
           >
             임시저장 {statusCounts.draft}
           </button>
           <button
             onClick={() => handleStatusChange('published')}
-            className={`px-3 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
+            className={`px-2.5 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
               statusFilter === 'published'
                 ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'text-gray-500 hover:bg-gray-100'
             }`}
           >
             발행됨 {statusCounts.published}
           </button>
-
-          {/* 구분선 */}
-          {allTags.length > 0 && (
-            <div className="w-px h-5 bg-gray-200 flex-shrink-0" />
-          )}
-
-          {/* 태그 필터 */}
-          {allTags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => handleTagChange(selectedTag === tag ? null : tag)}
-              className={`px-3 py-1 text-sm rounded-full whitespace-nowrap transition-colors ${
-                selectedTag === tag
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              #{tag}
-            </button>
-          ))}
         </div>
+
+        {/* 태그 필터 */}
+        {allTags.length > 0 && (
+          <div className="max-w-4xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto">
+            <span className="text-xs text-gray-400 flex-shrink-0">태그:</span>
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => handleTagChange(selectedTag === tag ? null : tag)}
+                className={`px-2.5 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
+                  selectedTag === tag
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                }`}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       {/* 아티클 목록 */}
