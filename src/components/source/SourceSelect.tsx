@@ -97,56 +97,54 @@ export function SourceSelect({
     }
   };
 
+  // 선택된 소스 객체
+  const selectedSource = selectedSourceId ? sources.find((s) => s.id === selectedSourceId) : null;
+
   return (
     <div ref={wrapperRef} className="relative">
-      <div className="relative">
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onFocus={() => setShowDropdown(true)}
-          placeholder="출처 이름 입력 또는 선택..."
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 text-sm"
-        />
-        {inputValue && (
+      {/* 소스가 선택된 상태: 칩(pill) 형태로 표시 */}
+      {selectedSource ? (
+        <div className="flex items-center gap-2 px-3 py-2 border border-blue-200 bg-blue-50 rounded-lg">
+          <span className="text-sm">
+            {SOURCE_CATEGORY_LABELS[selectedSource.category].emoji}
+          </span>
+          <span className="flex-1 text-sm font-medium text-blue-800 truncate">
+            {selectedSource.name}
+          </span>
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="flex items-center gap-1 px-2 py-0.5 text-xs text-blue-600 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+            title="출처 선택 해제"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
+            해제
           </button>
-        )}
-      </div>
-
-      {/* 선택된 소스 카테고리 표시 */}
-      {selectedSourceId && (
-        <div className="mt-1">
-          {(() => {
-            const selected = sources.find((s) => s.id === selectedSourceId);
-            if (!selected) return null;
-            const { emoji, label } = SOURCE_CATEGORY_LABELS[selected.category];
-            return (
-              <span className="text-xs text-gray-500">
-                {emoji} {label}
-                {selected.url && (
-                  <>
-                    {' · '}
-                    <a
-                      href={selected.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                    >
-                      링크
-                    </a>
-                  </>
-                )}
-              </span>
-            );
-          })()}
+        </div>
+      ) : (
+        /* 소스 미선택 상태: 검색/입력 */
+        <div className="relative">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onFocus={() => setShowDropdown(true)}
+            placeholder="출처 이름 입력 또는 선택..."
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 text-sm"
+          />
+          {inputValue && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
       )}
 

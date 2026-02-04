@@ -1,5 +1,35 @@
 # X Article Editor - 변경 이력 및 로드맵
 
+## [2026-02-04] - 인사이트 폼 UX 개선: 출처/링크 분리 + 삭제 UX
+### 작업 내용
+- **출처와 링크 필드 분리**
+  - `insights.link` TEXT 컬럼 추가 (개별 인사이트의 원문 링크)
+  - 기존 source에 URL(http)이 입력된 행 → link 컬럼으로 자동 이관
+  - InsightForm에 "원문 링크" URL input 추가 (출처 아래)
+- **출처 선택 해제 UX 개선** (SourceSelect)
+  - 소스 선택된 상태: 칩(pill) 형태 + "X 해제" 버튼으로 시각적 명확화
+  - 미선택 상태: 기존 검색/입력 방식 유지
+- **태그 삭제 UX 개선** (InsightForm)
+  - 태그 hover 시 빨간색 배경/텍스트 강조로 삭제 의도 명확화
+- **InsightCard 링크 아이콘**
+  - link 값이 있으면 외부 링크 아이콘 표시 (새 탭에서 열기)
+
+### 새 파일
+- `supabase/migrations/009_add_insights_link.sql`
+
+### 수정 파일
+- `src/types/insight.ts` (link 필드 추가)
+- `src/hooks/useInsight.ts` (link 매핑/저장)
+- `src/components/insight/InsightForm.tsx` (링크 입력 + 태그 UX)
+- `src/components/insight/InsightCard.tsx` (링크 아이콘)
+- `src/components/source/SourceSelect.tsx` (선택 해제 칩 UI)
+
+### 다음에 할 것
+- Supabase에서 009 마이그레이션 실행 필요
+- UX 사용성 테스트 (출처 선택/해제, 링크 입력, 태그 삭제)
+
+---
+
 ## [2026-02-04] - 뉴스레터 소스 관리 시스템
 ### 작업 내용
 - **소스(출처) 관리 시스템 추가**

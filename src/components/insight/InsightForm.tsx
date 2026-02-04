@@ -31,6 +31,7 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
   const [summary, setSummary] = useState(insight?.summary || '');
   const [source, setSource] = useState(insight?.source || '');
   const [sourceId, setSourceId] = useState<string | undefined>(insight?.source_id);
+  const [link, setLink] = useState(insight?.link || '');
   const [insightDate, setInsightDate] = useState(
     insight?.insight_date || new Date().toISOString().split('T')[0]
   );
@@ -47,6 +48,7 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
       setSummary(insight.summary || '');
       setSource(insight.source || '');
       setSourceId(insight.source_id);
+      setLink(insight.link || '');
       setInsightDate(insight.insight_date);
       setActionType(insight.action_type);
       setStatus(insight.status);
@@ -98,6 +100,7 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
       summary: summary.trim() || undefined,
       source: source.trim() || undefined,
       source_id: sourceId,
+      link: link.trim() || undefined,
       insight_date: insightDate,
       action_type: actionType,
       status,
@@ -186,6 +189,18 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
               )}
             </div>
 
+            {/* 원문 링크 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">원문 링크</label>
+              <input
+                type="url"
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 text-sm"
+              />
+            </div>
+
             {/* 날짜 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
@@ -261,13 +276,13 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+                      className="group/tag inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full hover:bg-red-50 hover:text-red-600 transition-colors"
                     >
                       {tag}
                       <button
                         type="button"
                         onClick={() => removeTag(tag)}
-                        className="text-blue-400 hover:text-blue-600"
+                        className="text-blue-400 group-hover/tag:text-red-500 hover:text-red-600 transition-colors"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
