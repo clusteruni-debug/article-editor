@@ -1,5 +1,63 @@
 # X Article Editor - 변경 이력 및 로드맵
 
+## [2026-02-04] - 뉴스레터 소스 관리 시스템
+### 작업 내용
+- **소스(출처) 관리 시스템 추가**
+  - `sources` 테이블 생성 (name UNIQUE, url, description, category)
+  - `insights.source_id` FK 컬럼 추가 (ON DELETE SET NULL)
+  - 기존 source 텍스트 → sources 테이블 자동 마이그레이션
+  - 카테고리: 뉴스레터, 블로그, 팟캐스트, 유튜브, X/트위터, 기타
+- **소스 CRUD** (useSource 훅)
+  - 생성/수정/삭제 + UNIQUE name 중복 에러 처리
+  - 소스별 인사이트 수 통계 (getSourceStats)
+- **소스 관리 모달** (SourceManager)
+  - 목록 + 생성/편집/삭제 UI
+  - 소스별 인사이트 수, 카테고리 이모지, URL 링크 표시
+- **인사이트 폼에 소스 선택** (SourceSelect)
+  - 텍스트 입력 + 기존 소스 자동완성 필터링
+  - "새 출처 추가" 인라인 생성 (카테고리, URL 입력)
+- **인사이트 페이지에 소스 필터** 추가 (태그 필터 아래, 보라색 pill 버튼)
+- `insights.source` TEXT 컬럼 유지 (하위호환)
+
+### 새 파일
+- `supabase/migrations/008_create_sources_table.sql`
+- `src/types/source.ts`
+- `src/hooks/useSource.ts`
+- `src/components/source/SourceSelect.tsx`
+- `src/components/source/SourceManager.tsx`
+- `src/components/source/index.ts`
+
+### 수정 파일
+- `src/types/insight.ts` (source_id 필드 추가)
+- `src/hooks/useInsight.ts` (source_id 매핑/저장)
+- `src/components/insight/InsightForm.tsx` (SourceSelect 통합)
+- `src/app/insights/page.tsx` (소스 관리/필터 통합)
+
+### 다음에 할 것
+- Supabase에서 008 마이그레이션 실행 필요
+- 소스 관리 UI 사용성 테스트
+
+---
+
+## [2026-02-04] - 인사이트 태그/필터 시스템
+### 작업 내용
+- 인사이트 날짜별 그룹핑 + 아코디언 (최근 3일 펼침, 나머지 접힘)
+- 태그 시스템 (DB tags 컬럼, 기본 추천 태그 8개, 입력 UI, 필터)
+- 검색에 태그 포함, 정렬 드롭다운 (최신순/오래된순)
+- 통계 바를 클릭 가능한 상태 필터로 통합 (중복 상태 필터 제거)
+- .env.local 설정 (Supabase + Gemini)
+
+### 영향 파일
+- `src/app/insights/page.tsx`, `src/components/insight/InsightCard.tsx`
+- `src/components/insight/InsightForm.tsx`, `src/hooks/useInsight.ts`
+- `src/types/insight.ts`, `supabase/migrations/007_add_insights_tags.sql`
+
+### 다음에 할 것
+- Supabase에서 007 마이그레이션 실행 필요 (tags 컬럼)
+- 인사이트에 태그 데이터 추가하여 필터 기능 활용
+
+---
+
 ## 현재 버전 기능 (v1.0)
 
 ### 에디터 핵심

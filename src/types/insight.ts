@@ -34,6 +34,7 @@ export interface Insight {
   keyword: string;
   summary?: string;
   source?: string;
+  source_id?: string;
   insight_date: string;
   action_type: ActionType;
   status: InsightStatus;
@@ -49,6 +50,7 @@ export interface InsightInsert {
   keyword: string;
   summary?: string;
   source?: string;
+  source_id?: string;
   insight_date?: string;
   action_type?: ActionType;
   status?: InsightStatus;
@@ -62,6 +64,7 @@ export interface InsightUpdate {
   keyword?: string;
   summary?: string;
   source?: string;
+  source_id?: string;
   insight_date?: string;
   action_type?: ActionType;
   status?: InsightStatus;

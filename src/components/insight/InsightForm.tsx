@@ -10,6 +10,8 @@ import {
   ACTION_TYPE_LABELS,
   STATUS_LABELS,
 } from '@/types/insight';
+import { Source, SourceInsert } from '@/types/source';
+import { SourceSelect } from '@/components/source';
 
 interface InsightFormProps {
   insight?: Insight;
@@ -17,15 +19,18 @@ interface InsightFormProps {
   onCancel: () => void;
   isLoading?: boolean;
   existingTags?: string[]; // 기존 사용된 태그 목록 (자동완성용)
+  existingSources?: Source[]; // 기존 등록된 소스 목록
+  onCreateSource?: (data: SourceInsert) => Promise<Source | null>; // 인라인 소스 생성
 }
 
 const ACTION_TYPES: ActionType[] = ['execute', 'idea', 'observe', 'reference'];
 const STATUSES: InsightStatus[] = ['unread', 'idea', 'drafted', 'published'];
 
-export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTags = [] }: InsightFormProps) {
+export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTags = [], existingSources = [], onCreateSource }: InsightFormProps) {
   const [keyword, setKeyword] = useState(insight?.keyword || '');
   const [summary, setSummary] = useState(insight?.summary || '');
   const [source, setSource] = useState(insight?.source || '');
+  const [sourceId, setSourceId] = useState<string | undefined>(insight?.source_id);
   const [insightDate, setInsightDate] = useState(
     insight?.insight_date || new Date().toISOString().split('T')[0]
   );
@@ -41,6 +46,7 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
       setKeyword(insight.keyword);
       setSummary(insight.summary || '');
       setSource(insight.source || '');
+      setSourceId(insight.source_id);
       setInsightDate(insight.insight_date);
       setActionType(insight.action_type);
       setStatus(insight.status);
@@ -91,6 +97,7 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
       keyword: keyword.trim(),
       summary: summary.trim() || undefined,
       source: source.trim() || undefined,
+      source_id: sourceId,
       insight_date: insightDate,
       action_type: actionType,
       status,
@@ -154,10 +161,21 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
               />
             </div>
 
-            {/* 출처, 날짜 */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">출처</label>
+            {/* 출처 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">출처</label>
+              {existingSources.length > 0 || onCreateSource ? (
+                <SourceSelect
+                  sources={existingSources}
+                  selectedSourceId={sourceId}
+                  selectedSourceName={source}
+                  onSelect={(id, name) => {
+                    setSourceId(id);
+                    setSource(name);
+                  }}
+                  onCreateSource={onCreateSource}
+                />
+              ) : (
                 <input
                   type="text"
                   value={source}
@@ -165,16 +183,18 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
                   placeholder="뉴스레터, URL 등"
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
-                <input
-                  type="date"
-                  value={insightDate}
-                  onChange={(e) => setInsightDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
-                />
-              </div>
+              )}
+            </div>
+
+            {/* 날짜 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
+              <input
+                type="date"
+                value={insightDate}
+                onChange={(e) => setInsightDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
+              />
             </div>
 
             {/* 액션 타입 */}

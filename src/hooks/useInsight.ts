@@ -17,6 +17,7 @@ interface InsightRow {
   keyword: string;
   summary: string | null;
   source: string | null;
+  source_id: string | null;
   insight_date: string;
   action_type: string;
   status: string;
@@ -42,6 +43,7 @@ function toInsight(row: InsightRow): Insight {
     keyword: row.keyword,
     summary: row.summary ?? undefined,
     source: row.source ?? undefined,
+    source_id: row.source_id ?? undefined,
     insight_date: row.insight_date,
     action_type: row.action_type as ActionType,
     status: row.status as InsightStatus,
@@ -85,6 +87,7 @@ export function useInsight() {
           keyword: data.keyword,
           summary: data.summary || null,
           source: data.source || null,
+          source_id: data.source_id || null,
           insight_date: data.insight_date || new Date().toISOString().split('T')[0],
           action_type: data.action_type || 'observe',
           status: data.status || 'unread',
@@ -130,6 +133,7 @@ export function useInsight() {
         if (data.keyword !== undefined) updateData.keyword = data.keyword;
         if (data.summary !== undefined) updateData.summary = data.summary;
         if (data.source !== undefined) updateData.source = data.source;
+        if (data.source_id !== undefined) updateData.source_id = data.source_id || null;
         if (data.insight_date !== undefined) updateData.insight_date = data.insight_date;
         if (data.action_type !== undefined) updateData.action_type = data.action_type;
         if (data.status !== undefined) updateData.status = data.status;

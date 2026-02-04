@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { format, differenceInCalendarDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useInsight } from '@/hooks/useInsight';
+import { useSource } from '@/hooks/useSource';
 import { InsightCard, InsightForm } from '@/components/insight';
+import { SourceManager } from '@/components/source';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
@@ -17,6 +19,7 @@ import {
   ACTION_TYPE_LABELS,
   DEFAULT_TAGS,
 } from '@/types/insight';
+import { Source, SourceStats } from '@/types/source';
 
 // 날짜별 그룹 타입
 interface DateGroup {
@@ -30,14 +33,25 @@ const ACTION_TYPES: ActionType[] = ['execute', 'idea', 'observe', 'reference'];
 export default function InsightsPage() {
   const router = useRouter();
   const { getInsights, createInsight, updateInsight, deleteInsight, getAllTags, loading } = useInsight();
+  const {
+    getSources,
+    createSource,
+    updateSource,
+    deleteSource,
+    getSourceStats,
+  } = useSource();
   const { success: showSuccess, error: showError } = useToast();
   const [insights, setInsights] = useState<InsightWithArticle[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [sources, setSources] = useState<Source[]>([]);
+  const [sourceStats, setSourceStats] = useState<SourceStats[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedActionType, setSelectedActionType] = useState<ActionType | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<InsightStatus | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedSource, setSelectedSource] = useState<string | null>(null); // source_id 필터
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // 최신순/오래된순
+  const [showSourceManager, setShowSourceManager] = useState(false);
 
   // 아코디언 상태: 접힌 날짜 Set (기본: 최근 3일 제외 나머지 접힘)
   const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
@@ -53,11 +67,22 @@ export default function InsightsPage() {
   }, []);
 
   const loadInsights = async () => {
-    const [data, dbTags] = await Promise.all([getInsights(), getAllTags()]);
+    const [data, dbTags, sourceList] = await Promise.all([
+      getInsights(),
+      getAllTags(),
+      getSources(),
+    ]);
     setInsights(data);
+    setSources(sourceList);
     // 기본 태그 + DB에서 사용된 태그를 합쳐서 중복 제거
     const merged = Array.from(new Set([...DEFAULT_TAGS, ...dbTags])).sort();
     setAllTags(merged);
+  };
+
+  // 소스 관리 모달에서 사용할 통계 로드
+  const loadSourceStats = async () => {
+    const stats = await getSourceStats();
+    setSourceStats(stats);
   };
 
   // 필터링
@@ -73,6 +98,9 @@ export default function InsightsPage() {
     if (selectedTag) {
       result = result.filter((i) => i.tags && i.tags.includes(selectedTag));
     }
+    if (selectedSource) {
+      result = result.filter((i) => i.source_id === selectedSource);
+    }
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter((i) => {
@@ -86,7 +114,7 @@ export default function InsightsPage() {
     }
 
     return result;
-  }, [insights, selectedActionType, selectedStatus, selectedTag, searchQuery]);
+  }, [insights, selectedActionType, selectedStatus, selectedTag, selectedSource, searchQuery]);
 
   // 날짜별 그룹핑
   const dateGroups = useMemo((): DateGroup[] => {
@@ -256,7 +284,18 @@ export default function InsightsPage() {
           {/* 상단 */}
           <div className="flex items-center justify-between gap-4 mb-4">
             <h1 className="text-xl font-bold">Insights</h1>
-            <Button onClick={() => setShowForm(true)}>새 인사이트</Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  loadSourceStats();
+                  setShowSourceManager(true);
+                }}
+              >
+                출처 관리
+              </Button>
+              <Button onClick={() => setShowForm(true)}>새 인사이트</Button>
+            </div>
           </div>
 
           {/* 통계 (클릭으로 상태 필터링) */}
@@ -397,7 +436,7 @@ export default function InsightsPage() {
 
           {/* 필터: 태그 */}
           {allTags.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto">
+            <div className="flex items-center gap-2 overflow-x-auto mb-2">
               <span className="text-xs text-gray-400 flex-shrink-0">태그:</span>
               <button
                 onClick={() => setSelectedTag(null)}
@@ -420,6 +459,36 @@ export default function InsightsPage() {
                   }`}
                 >
                   {tag}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 필터: 출처 */}
+          {sources.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <span className="text-xs text-gray-400 flex-shrink-0">출처:</span>
+              <button
+                onClick={() => setSelectedSource(null)}
+                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
+                  selectedSource === null
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                }`}
+              >
+                전체
+              </button>
+              {sources.map((src) => (
+                <button
+                  key={src.id}
+                  onClick={() => setSelectedSource(selectedSource === src.id ? null : src.id)}
+                  className={`px-2 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
+                    selectedSource === src.id
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                  }`}
+                >
+                  {src.name}
                 </button>
               ))}
             </div>
@@ -470,7 +539,7 @@ export default function InsightsPage() {
           </div>
         ) : (
           <div>
-            {(searchQuery || selectedActionType || selectedStatus || selectedTag) && (
+            {(searchQuery || selectedActionType || selectedStatus || selectedTag || selectedSource) && (
               <div className="px-6 py-3 bg-gray-50 text-sm text-gray-600 border-b border-gray-100">
                 {filteredInsights.length}개의 결과
               </div>
@@ -524,6 +593,33 @@ export default function InsightsPage() {
           onCancel={handleCloseForm}
           isLoading={formLoading}
           existingTags={allTags}
+          existingSources={sources}
+          onCreateSource={async (data) => {
+            const result = await createSource(data);
+            if (result) {
+              // 소스 목록 갱신
+              const updated = await getSources();
+              setSources(updated);
+            }
+            return result;
+          }}
+        />
+      )}
+
+      {/* 소스 관리 모달 */}
+      {showSourceManager && (
+        <SourceManager
+          onClose={() => setShowSourceManager(false)}
+          sources={sourceStats}
+          onCreateSource={createSource}
+          onUpdateSource={updateSource}
+          onDeleteSource={deleteSource}
+          onRefresh={async () => {
+            await loadSourceStats();
+            // 소스 목록도 갱신 (필터에 반영)
+            const updated = await getSources();
+            setSources(updated);
+          }}
         />
       )}
     </div>
