@@ -5,6 +5,24 @@ import { createClient } from '@/lib/supabase/client';
 import { Article, ArticleInsert, ArticleUpdate } from '@/types/article';
 import { JSONContent } from '@tiptap/react';
 
+// 페이지네이션 파라미터
+export interface PaginationParams {
+  page: number;           // 1부터 시작
+  pageSize: number;       // 페이지당 개수 (기본 10)
+  search?: string;        // 검색어 (제목, 내용, 태그)
+  tag?: string;           // 태그 필터
+  status?: 'draft' | 'published' | null; // 상태 필터 (null = 전체)
+  sort?: 'newest' | 'oldest' | 'updated' | 'title'; // 정렬
+}
+
+// 페이지네이션 결과
+export interface PaginatedResult {
+  articles: Article[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+
 interface ArticleRow {
   id: string;
   title: string;
@@ -192,6 +210,112 @@ export function useArticle() {
     }
   }, [supabase]);
 
+  // 페이지네이션 + 서버사이드 필터링 조회
+  const getArticlesPaginated = useCallback(async (params: PaginationParams): Promise<PaginatedResult> => {
+    const { page, pageSize, search, tag, status, sort = 'newest' } = params;
+    console.log('[INFO] 아티클 페이지네이션 조회:', params);
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 기본 쿼리: 삭제되지 않은 아티클
+      let query = supabase
+        .from('articles')
+        .select('*', { count: 'exact' })
+        .is('deleted_at', null);
+
+      // 상태 필터
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      // 태그 필터 (Supabase의 contains 사용)
+      if (tag) {
+        query = query.contains('tags', [tag]);
+      }
+
+      // 검색어 필터 (제목 or 내용 텍스트)
+      if (search?.trim()) {
+        const q = search.trim();
+        query = query.or(`title.ilike.%${q}%,content_text.ilike.%${q}%`);
+      }
+
+      // 정렬
+      switch (sort) {
+        case 'oldest':
+          query = query.order('created_at', { ascending: true });
+          break;
+        case 'updated':
+          query = query.order('updated_at', { ascending: false });
+          break;
+        case 'title':
+          query = query.order('title', { ascending: true });
+          break;
+        case 'newest':
+        default:
+          query = query.order('created_at', { ascending: false });
+          break;
+      }
+
+      // 페이지네이션 (range는 0-based)
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data: articles, error: err, count } = await query;
+
+      if (err) {
+        console.error('[ERROR] Supabase 에러:', err);
+        throw err;
+      }
+
+      const totalCount = count ?? 0;
+      const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+      console.log('[SUCCESS] 페이지네이션 조회 완료:', {
+        page,
+        totalCount,
+        totalPages,
+        fetched: articles?.length || 0,
+      });
+
+      return {
+        articles: (articles as ArticleRow[] || []).map(toArticle),
+        totalCount,
+        totalPages,
+        currentPage: page,
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '아티클 목록 조회 실패';
+      console.error('[ERROR] 페이지네이션 조회 실패:', message);
+      setError(message);
+      return { articles: [], totalCount: 0, totalPages: 1, currentPage: 1 };
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
+
+  // 전체 태그 목록 조회 (필터 UI용, 페이지네이션과 별도)
+  const getAllTags = useCallback(async (): Promise<string[]> => {
+    try {
+      const { data, error: err } = await supabase
+        .from('articles')
+        .select('tags')
+        .is('deleted_at', null)
+        .not('tags', 'is', null);
+
+      if (err) throw err;
+
+      const tagSet = new Set<string>();
+      (data || []).forEach((row: { tags: string[] | null }) => {
+        row.tags?.forEach((t: string) => tagSet.add(t));
+      });
+      return Array.from(tagSet).sort();
+    } catch {
+      return [];
+    }
+  }, [supabase]);
+
   // 휴지통 목록 조회
   const getDeletedArticles = useCallback(async (): Promise<Article[]> => {
     console.log('[INFO] 휴지통 목록 조회');
@@ -316,6 +440,8 @@ export function useArticle() {
     updateArticle,
     getArticle,
     getArticles,
+    getArticlesPaginated,
+    getAllTags,
     getDeletedArticles,
     deleteArticle,
     restoreArticle,
