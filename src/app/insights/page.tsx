@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { format, differenceInCalendarDays } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import { useInsight } from '@/hooks/useInsight';
 import { InsightCard, InsightForm } from '@/components/insight';
 import { Button } from '@/components/ui/Button';
@@ -13,20 +15,32 @@ import {
   ActionType,
   InsightStatus,
   ACTION_TYPE_LABELS,
-  STATUS_LABELS,
+  DEFAULT_TAGS,
 } from '@/types/insight';
 
+// 날짜별 그룹 타입
+interface DateGroup {
+  date: string; // YYYY-MM-DD
+  label: string; // 표시용 (예: 2026.02.04)
+  insights: InsightWithArticle[];
+}
+
 const ACTION_TYPES: ActionType[] = ['execute', 'idea', 'observe', 'reference'];
-const STATUSES: InsightStatus[] = ['unread', 'idea', 'drafted', 'published'];
 
 export default function InsightsPage() {
   const router = useRouter();
-  const { getInsights, createInsight, updateInsight, deleteInsight, loading } = useInsight();
+  const { getInsights, createInsight, updateInsight, deleteInsight, getAllTags, loading } = useInsight();
   const { success: showSuccess, error: showError } = useToast();
   const [insights, setInsights] = useState<InsightWithArticle[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedActionType, setSelectedActionType] = useState<ActionType | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<InsightStatus | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // 최신순/오래된순
+
+  // 아코디언 상태: 접힌 날짜 Set (기본: 최근 3일 제외 나머지 접힘)
+  const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
 
   // 모달 상태
   const [showForm, setShowForm] = useState(false);
@@ -39,8 +53,11 @@ export default function InsightsPage() {
   }, []);
 
   const loadInsights = async () => {
-    const data = await getInsights();
+    const [data, dbTags] = await Promise.all([getInsights(), getAllTags()]);
     setInsights(data);
+    // 기본 태그 + DB에서 사용된 태그를 합쳐서 중복 제거
+    const merged = Array.from(new Set([...DEFAULT_TAGS, ...dbTags])).sort();
+    setAllTags(merged);
   };
 
   // 필터링
@@ -53,19 +70,76 @@ export default function InsightsPage() {
     if (selectedStatus) {
       result = result.filter((i) => i.status === selectedStatus);
     }
+    if (selectedTag) {
+      result = result.filter((i) => i.tags && i.tags.includes(selectedTag));
+    }
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter((i) => {
         return (
           i.keyword.toLowerCase().includes(query) ||
           i.summary?.toLowerCase().includes(query) ||
-          i.source?.toLowerCase().includes(query)
+          i.source?.toLowerCase().includes(query) ||
+          i.tags?.some((t) => t.toLowerCase().includes(query))
         );
       });
     }
 
     return result;
-  }, [insights, selectedActionType, selectedStatus, searchQuery]);
+  }, [insights, selectedActionType, selectedStatus, selectedTag, searchQuery]);
+
+  // 날짜별 그룹핑
+  const dateGroups = useMemo((): DateGroup[] => {
+    const groupMap = new Map<string, InsightWithArticle[]>();
+
+    for (const insight of filteredInsights) {
+      const date = insight.insight_date; // YYYY-MM-DD
+      if (!groupMap.has(date)) {
+        groupMap.set(date, []);
+      }
+      groupMap.get(date)!.push(insight);
+    }
+
+    // 정렬 순서에 따라 날짜 정렬
+    const sortedDates = Array.from(groupMap.keys()).sort((a, b) => {
+      const diff = new Date(b).getTime() - new Date(a).getTime();
+      return sortOrder === 'desc' ? diff : -diff;
+    });
+
+    return sortedDates.map((date) => ({
+      date,
+      label: format(new Date(date), 'yyyy.MM.dd (EEEE)', { locale: ko }),
+      insights: groupMap.get(date)!,
+    }));
+  }, [filteredInsights, sortOrder]);
+
+  // 인사이트 로드 후 최근 3일 이외의 날짜를 접힘 상태로 초기화
+  useEffect(() => {
+    if (dateGroups.length > 0) {
+      const today = new Date();
+      const collapsed = new Set<string>();
+      for (const group of dateGroups) {
+        const daysDiff = differenceInCalendarDays(today, new Date(group.date));
+        if (daysDiff > 2) {
+          collapsed.add(group.date);
+        }
+      }
+      setCollapsedDates(collapsed);
+    }
+  }, [insights]); // insights 전체가 변할 때만 (필터 변경 시에는 리셋 안 함)
+
+  // 아코디언 토글
+  const toggleDate = useCallback((date: string) => {
+    setCollapsedDates((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) {
+        next.delete(date);
+      } else {
+        next.add(date);
+      }
+      return next;
+    });
+  }, []);
 
   // 통계
   const stats = useMemo(() => {
@@ -185,53 +259,107 @@ export default function InsightsPage() {
             <Button onClick={() => setShowForm(true)}>새 인사이트</Button>
           </div>
 
-          {/* 통계 */}
-          <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-            <span>전체 {stats.total}</span>
-            <span className="text-gray-300">|</span>
-            <span>미확인 {stats.unread}</span>
-            <span>아이디어 {stats.idea}</span>
-            <span>작성중 {stats.drafted}</span>
-            <span className="text-green-600">발행완료 {stats.published}</span>
+          {/* 통계 (클릭으로 상태 필터링) */}
+          <div className="flex items-center gap-1 text-sm mb-4 overflow-x-auto">
+            <button
+              onClick={() => setSelectedStatus(null)}
+              className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
+                selectedStatus === null
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              전체 {stats.total}
+            </button>
+            <button
+              onClick={() => setSelectedStatus(selectedStatus === 'unread' ? null : 'unread')}
+              className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
+                selectedStatus === 'unread'
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              미확인 {stats.unread}
+            </button>
+            <button
+              onClick={() => setSelectedStatus(selectedStatus === 'idea' ? null : 'idea')}
+              className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
+                selectedStatus === 'idea'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              아이디어 {stats.idea}
+            </button>
+            <button
+              onClick={() => setSelectedStatus(selectedStatus === 'drafted' ? null : 'drafted')}
+              className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
+                selectedStatus === 'drafted'
+                  ? 'bg-yellow-500 text-white'
+                  : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              작성중 {stats.drafted}
+            </button>
+            <button
+              onClick={() => setSelectedStatus(selectedStatus === 'published' ? null : 'published')}
+              className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
+                selectedStatus === 'published'
+                  ? 'bg-green-600 text-white'
+                  : 'text-green-600 hover:bg-green-50'
+              }`}
+            >
+              발행완료 {stats.published}
+            </button>
           </div>
 
-          {/* 검색 */}
-          <div className="relative mb-3">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              placeholder="키워드, 요약, 출처 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          {/* 검색 + 정렬 */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="relative flex-1">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder="키워드, 요약, 출처, 태그 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-gray-400 flex-shrink-0"
+            >
+              <option value="desc">최신순</option>
+              <option value="asc">오래된순</option>
+            </select>
           </div>
 
           {/* 필터: 액션 타입 */}
@@ -267,36 +395,35 @@ export default function InsightsPage() {
             })}
           </div>
 
-          {/* 필터: 상태 */}
-          <div className="flex items-center gap-2 overflow-x-auto">
-            <span className="text-xs text-gray-400 flex-shrink-0">상태:</span>
-            <button
-              onClick={() => setSelectedStatus(null)}
-              className={`px-2 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
-                selectedStatus === null
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              전체
-            </button>
-            {STATUSES.map((status) => {
-              const { label } = STATUS_LABELS[status];
-              return (
+          {/* 필터: 태그 */}
+          {allTags.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <span className="text-xs text-gray-400 flex-shrink-0">태그:</span>
+              <button
+                onClick={() => setSelectedTag(null)}
+                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
+                  selectedTag === null
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                }`}
+              >
+                전체
+              </button>
+              {allTags.map((tag) => (
                 <button
-                  key={status}
-                  onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
+                  key={tag}
+                  onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
                   className={`px-2 py-1 text-xs rounded-full whitespace-nowrap transition-colors ${
-                    selectedStatus === status
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    selectedTag === tag
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
                   }`}
                 >
-                  {label}
+                  {tag}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </header>
 
@@ -343,22 +470,48 @@ export default function InsightsPage() {
           </div>
         ) : (
           <div>
-            {(searchQuery || selectedActionType || selectedStatus) && (
+            {(searchQuery || selectedActionType || selectedStatus || selectedTag) && (
               <div className="px-6 py-3 bg-gray-50 text-sm text-gray-600 border-b border-gray-100">
                 {filteredInsights.length}개의 결과
               </div>
             )}
-            {filteredInsights.map((insight) => (
-              <InsightCard
-                key={insight.id}
-                insight={insight}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onStartArticle={handleStartArticle}
-                onGenerateAI={handleGenerateAI}
-                isGenerating={generatingId === insight.id}
-              />
-            ))}
+            {dateGroups.map((group) => {
+              const isCollapsed = collapsedDates.has(group.date);
+              return (
+                <div key={group.date}>
+                  {/* 날짜 헤더 */}
+                  <button
+                    onClick={() => toggleDate(group.date)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition-colors sticky top-[165px] z-[5]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-400">
+                        {isCollapsed ? '▶' : '▼'}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        {group.label}
+                      </span>
+                      <span className="text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
+                        {group.insights.length}개
+                      </span>
+                    </div>
+                  </button>
+                  {/* 인사이트 목록 */}
+                  {!isCollapsed &&
+                    group.insights.map((insight) => (
+                      <InsightCard
+                        key={insight.id}
+                        insight={insight}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onStartArticle={handleStartArticle}
+                        onGenerateAI={handleGenerateAI}
+                        isGenerating={generatingId === insight.id}
+                      />
+                    ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </main>
@@ -370,6 +523,7 @@ export default function InsightsPage() {
           onSubmit={editingInsight ? handleUpdate : handleCreate}
           onCancel={handleCloseForm}
           isLoading={formLoading}
+          existingTags={allTags}
         />
       )}
     </div>

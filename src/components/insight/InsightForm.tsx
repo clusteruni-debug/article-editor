@@ -16,12 +16,13 @@ interface InsightFormProps {
   onSubmit: (data: InsightInsert) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  existingTags?: string[]; // 기존 사용된 태그 목록 (자동완성용)
 }
 
 const ACTION_TYPES: ActionType[] = ['execute', 'idea', 'observe', 'reference'];
 const STATUSES: InsightStatus[] = ['unread', 'idea', 'drafted', 'published'];
 
-export function InsightForm({ insight, onSubmit, onCancel, isLoading }: InsightFormProps) {
+export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTags = [] }: InsightFormProps) {
   const [keyword, setKeyword] = useState(insight?.keyword || '');
   const [summary, setSummary] = useState(insight?.summary || '');
   const [source, setSource] = useState(insight?.source || '');
@@ -30,6 +31,9 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading }: InsightF
   );
   const [actionType, setActionType] = useState<ActionType>(insight?.action_type || 'observe');
   const [status, setStatus] = useState<InsightStatus>(insight?.status || 'unread');
+  const [tags, setTags] = useState<string[]>(insight?.tags || []);
+  const [tagInput, setTagInput] = useState('');
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [notes, setNotes] = useState(insight?.notes || '');
 
   useEffect(() => {
@@ -40,9 +44,44 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading }: InsightF
       setInsightDate(insight.insight_date);
       setActionType(insight.action_type);
       setStatus(insight.status);
+      setTags(insight.tags || []);
       setNotes(insight.notes || '');
     }
   }, [insight]);
+
+  // 태그 추가
+  const addTag = (tag: string) => {
+    const trimmed = tag.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
+    }
+    setTagInput('');
+    setShowTagSuggestions(false);
+  };
+
+  // 태그 삭제
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter((t) => t !== tagToRemove));
+  };
+
+  // 태그 입력 키 처리
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      if (tagInput.trim()) {
+        addTag(tagInput);
+      }
+    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+      removeTag(tags[tags.length - 1]);
+    }
+  };
+
+  // 자동완성 추천 태그 (입력 중이면 필터링, 비어있으면 미사용 태그 전부 표시)
+  const suggestedTags = existingTags.filter(
+    (t) =>
+      !tags.includes(t) &&
+      (tagInput.trim().length === 0 || t.toLowerCase().includes(tagInput.toLowerCase()))
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +94,7 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading }: InsightF
       insight_date: insightDate,
       action_type: actionType,
       status,
+      tags,
       notes: notes.trim() || undefined,
     });
   };
@@ -190,6 +230,57 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading }: InsightF
                   );
                 })}
               </div>
+            </div>
+
+            {/* 태그 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">태그</label>
+              {/* 선택된 태그 목록 */}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="text-blue-400 hover:text-blue-600"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {/* 태그 입력 */}
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                placeholder="태그 입력 후 Enter (쉼표로 구분)"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 text-sm"
+              />
+              {/* 추천 태그 (항상 표시) */}
+              {suggestedTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {suggestedTags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => addTag(tag)}
+                      className="px-2 py-1 text-xs rounded-full border border-gray-200 text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
+                    >
+                      + {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* 메모 */}

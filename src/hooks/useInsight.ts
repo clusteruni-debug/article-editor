@@ -22,6 +22,7 @@ interface InsightRow {
   status: string;
   linked_article_id: string | null;
   platforms_published: string[] | null;
+  tags: string[] | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -46,6 +47,7 @@ function toInsight(row: InsightRow): Insight {
     status: row.status as InsightStatus,
     linked_article_id: row.linked_article_id ?? undefined,
     platforms_published: (row.platforms_published ?? []) as Platform[],
+    tags: row.tags ?? [],
     notes: row.notes ?? undefined,
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -88,6 +90,7 @@ export function useInsight() {
           status: data.status || 'unread',
           linked_article_id: data.linked_article_id || null,
           platforms_published: data.platforms_published || [],
+          tags: data.tags || [],
           notes: data.notes || null,
         };
 
@@ -134,6 +137,7 @@ export function useInsight() {
           updateData.linked_article_id = data.linked_article_id;
         if (data.platforms_published !== undefined)
           updateData.platforms_published = data.platforms_published;
+        if (data.tags !== undefined) updateData.tags = data.tags;
         if (data.notes !== undefined) updateData.notes = data.notes;
 
         const { data: insight, error: err } = await supabase
@@ -378,6 +382,33 @@ export function useInsight() {
     [supabase]
   );
 
+  // 사용된 모든 태그 목록 조회
+  const getAllTags = useCallback(async (): Promise<string[]> => {
+    try {
+      const { data, error: err } = await supabase
+        .from('insights')
+        .select('tags');
+
+      if (err) throw err;
+
+      // 모든 태그를 하나의 배열로 합치고 중복 제거
+      const allTags = new Set<string>();
+      for (const row of data || []) {
+        const tags = (row as { tags: string[] | null }).tags;
+        if (tags) {
+          for (const tag of tags) {
+            allTags.add(tag);
+          }
+        }
+      }
+
+      return Array.from(allTags).sort();
+    } catch (err) {
+      console.error('[ERROR] 태그 목록 조회 실패:', err);
+      return [];
+    }
+  }, [supabase]);
+
   return {
     loading,
     error,
@@ -389,5 +420,6 @@ export function useInsight() {
     linkArticle,
     updateStatus,
     addPlatform,
+    getAllTags,
   };
 }

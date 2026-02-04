@@ -16,6 +16,11 @@ export const STATUS_LABELS: Record<InsightStatus, { label: string; color: string
   published: { label: '발행완료', color: 'green' },
 };
 
+// 기본 추천 태그 (사용자가 태그 기능을 인지할 수 있도록)
+export const DEFAULT_TAGS = [
+  '크립토', '생산성', '투자', '커리어', 'AI', '마케팅', '트렌드', '개발',
+];
+
 export const PLATFORM_LABELS: Record<Platform, string> = {
   twitter: 'X (Twitter)',
   blog: '블로그',
@@ -34,6 +39,7 @@ export interface Insight {
   status: InsightStatus;
   linked_article_id?: string;
   platforms_published: Platform[];
+  tags: string[];
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -48,6 +54,7 @@ export interface InsightInsert {
   status?: InsightStatus;
   linked_article_id?: string;
   platforms_published?: Platform[];
+  tags?: string[];
   notes?: string;
 }
 
@@ -60,6 +67,7 @@ export interface InsightUpdate {
   status?: InsightStatus;
   linked_article_id?: string;
   platforms_published?: Platform[];
+  tags?: string[];
   notes?: string;
 }
 

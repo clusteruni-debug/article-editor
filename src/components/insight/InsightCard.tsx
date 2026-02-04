@@ -94,6 +94,20 @@ export function InsightCard({
           {/* 키워드 */}
           <h3 className="text-lg font-semibold text-gray-900 mb-1">{insight.keyword}</h3>
 
+          {/* 태그 */}
+          {insight.tags && insight.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-1.5">
+              {insight.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs rounded"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* 요약 */}
           {insight.summary && (
             <p className="text-sm text-gray-600 line-clamp-2 mb-2">{insight.summary}</p>
