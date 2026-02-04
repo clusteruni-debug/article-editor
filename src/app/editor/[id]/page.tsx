@@ -213,7 +213,7 @@ export default function EditArticlePage() {
     <div className="min-h-screen bg-white">
       {/* 헤더 */}
       <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
             onClick={() => router.push('/')}
             className="text-gray-500 hover:text-gray-700"
@@ -358,7 +358,7 @@ export default function EditArticlePage() {
       </header>
 
       {/* 에디터 영역 */}
-      <main className="max-w-[680px] mx-auto px-4 py-12">
+      <main className="max-w-4xl mx-auto px-4 py-12">
         {error && (
           <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg text-sm">
             {error}

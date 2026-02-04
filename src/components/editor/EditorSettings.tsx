@@ -23,6 +23,18 @@ const FONT_SIZES = [
   { value: '20px', label: '20px (아주 크게)' },
 ];
 
+const LETTER_SPACINGS = [
+  { value: '-0.03em', label: '좁게' },
+  { value: '0', label: '보통' },
+  { value: '0.05em', label: '넓게' },
+];
+
+const LINE_HEIGHTS = [
+  { value: '1.4', label: '좁게' },
+  { value: '1.6', label: '보통' },
+  { value: '2.0', label: '넓게' },
+];
+
 const PARAGRAPH_SPACINGS = [
   { value: '8px', label: '좁게' },
   { value: '12px', label: '보통 (기본)' },
@@ -33,48 +45,70 @@ const PARAGRAPH_SPACINGS = [
 export function EditorSettings({ isOpen, onClose }: EditorSettingsProps) {
   const [fontFamily, setFontFamily] = useState(FONTS[0].value);
   const [fontSize, setFontSize] = useState('16px');
+  const [letterSpacing, setLetterSpacing] = useState('0');
+  const [lineHeight, setLineHeight] = useState('1.6');
   const [paragraphSpacing, setParagraphSpacing] = useState('12px');
 
   // 로컬 스토리지에서 설정 불러오기
   useEffect(() => {
     const savedFont = localStorage.getItem('editor-font-family');
     const savedSize = localStorage.getItem('editor-font-size');
+    const savedLetterSpacing = localStorage.getItem('editor-letter-spacing');
+    const savedLineHeight = localStorage.getItem('editor-line-height');
     const savedSpacing = localStorage.getItem('editor-paragraph-spacing');
 
     if (savedFont) setFontFamily(savedFont);
     if (savedSize) setFontSize(savedSize);
+    if (savedLetterSpacing) setLetterSpacing(savedLetterSpacing);
+    if (savedLineHeight) setLineHeight(savedLineHeight);
     if (savedSpacing) setParagraphSpacing(savedSpacing);
 
     // CSS 변수 적용
     applySettings(
       savedFont || fontFamily,
       savedSize || fontSize,
+      savedLetterSpacing || letterSpacing,
+      savedLineHeight || lineHeight,
       savedSpacing || paragraphSpacing
     );
   }, []);
 
-  const applySettings = (font: string, size: string, spacing: string) => {
+  const applySettings = (font: string, size: string, ls: string, lh: string, spacing: string) => {
     document.documentElement.style.setProperty('--editor-font-family', font);
     document.documentElement.style.setProperty('--editor-font-size', size);
+    document.documentElement.style.setProperty('--editor-letter-spacing', ls);
+    document.documentElement.style.setProperty('--editor-line-height', lh);
     document.documentElement.style.setProperty('--editor-paragraph-spacing', spacing);
   };
 
   const handleFontChange = (value: string) => {
     setFontFamily(value);
     localStorage.setItem('editor-font-family', value);
-    applySettings(value, fontSize, paragraphSpacing);
+    applySettings(value, fontSize, letterSpacing, lineHeight, paragraphSpacing);
   };
 
   const handleSizeChange = (value: string) => {
     setFontSize(value);
     localStorage.setItem('editor-font-size', value);
-    applySettings(fontFamily, value, paragraphSpacing);
+    applySettings(fontFamily, value, letterSpacing, lineHeight, paragraphSpacing);
+  };
+
+  const handleLetterSpacingChange = (value: string) => {
+    setLetterSpacing(value);
+    localStorage.setItem('editor-letter-spacing', value);
+    applySettings(fontFamily, fontSize, value, lineHeight, paragraphSpacing);
+  };
+
+  const handleLineHeightChange = (value: string) => {
+    setLineHeight(value);
+    localStorage.setItem('editor-line-height', value);
+    applySettings(fontFamily, fontSize, letterSpacing, value, paragraphSpacing);
   };
 
   const handleSpacingChange = (value: string) => {
     setParagraphSpacing(value);
     localStorage.setItem('editor-paragraph-spacing', value);
-    applySettings(fontFamily, fontSize, value);
+    applySettings(fontFamily, fontSize, letterSpacing, lineHeight, value);
   };
 
   if (!isOpen) return null;
@@ -135,6 +169,50 @@ export function EditorSettings({ isOpen, onClose }: EditorSettingsProps) {
             </div>
           </div>
 
+          {/* 자간 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              자간
+            </label>
+            <div className="flex gap-2">
+              {LETTER_SPACINGS.map((ls) => (
+                <button
+                  key={ls.value}
+                  onClick={() => handleLetterSpacingChange(ls.value)}
+                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                    letterSpacing === ls.value
+                      ? 'bg-gray-900 text-white border-gray-900'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {ls.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 행간 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              행간
+            </label>
+            <div className="flex gap-2">
+              {LINE_HEIGHTS.map((lh) => (
+                <button
+                  key={lh.value}
+                  onClick={() => handleLineHeightChange(lh.value)}
+                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                    lineHeight === lh.value
+                      ? 'bg-gray-900 text-white border-gray-900'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {lh.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* 문단 간격 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -164,6 +242,8 @@ export function EditorSettings({ isOpen, onClose }: EditorSettingsProps) {
               style={{
                 fontFamily: fontFamily,
                 fontSize: fontSize,
+                letterSpacing: letterSpacing,
+                lineHeight: lineHeight,
                 marginBottom: paragraphSpacing,
               }}
             >
@@ -173,6 +253,8 @@ export function EditorSettings({ isOpen, onClose }: EditorSettingsProps) {
               style={{
                 fontFamily: fontFamily,
                 fontSize: fontSize,
+                letterSpacing: letterSpacing,
+                lineHeight: lineHeight,
               }}
             >
               두 번째 문단입니다. The quick brown fox.

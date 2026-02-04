@@ -1,5 +1,29 @@
 # X Article Editor - 변경 이력 및 로드맵
 
+## [2026-02-05] - 에디터 자간/행간 설정 + 너비 확장
+### 작업 내용
+- **자간(letter-spacing) 설정** 추가: 좁게(-0.03em) / 보통(0) / 넓게(0.05em) 프리셋
+- **행간(line-height) 설정** 추가: 좁게(1.4) / 보통(1.6) / 넓게(2.0) 프리셋
+- **CSS 변수** `--editor-letter-spacing` 추가, `.ProseMirror`과 `.article-content`에 적용
+- **localStorage 저장**: `editor-letter-spacing`, `editor-line-height` 키로 설정 유지
+- **미리보기**에 자간/행간 실시간 반영
+- **에디터 너비 확장**: main 영역 max-w-[680px] → max-w-4xl, header max-w-4xl → max-w-6xl
+- `.article-editor` CSS에서 max-width: 680px 제거 (Tailwind 클래스로 통일)
+
+### 수정 파일
+- `src/app/globals.css` (CSS 변수 + letter-spacing 적용)
+- `src/components/editor/EditorSettings.tsx` (자간/행간 프리셋 UI + 핸들러)
+- `src/app/editor/page.tsx` (너비 확장)
+- `src/app/editor/[id]/page.tsx` (너비 확장)
+- `src/app/article/[id]/page.tsx` (너비 확장)
+
+### DB 변경: 없음
+
+### 다음에 할 것
+- Vercel 배포 후 에디터 설정 모달에서 자간/행간 변경 → 실시간 반영 확인
+
+---
+
 ## [2026-02-05] - 아티클 목록 페이지네이션 + 필터/정렬 강화
 ### 작업 내용
 - **서버사이드 페이지네이션** (10개 단위)

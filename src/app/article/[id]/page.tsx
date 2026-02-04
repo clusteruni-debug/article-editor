@@ -44,7 +44,7 @@ export default function ArticlePage() {
     <div className="min-h-screen bg-white">
       {/* 헤더 */}
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
             onClick={() => router.push('/')}
             className="text-gray-500 hover:text-gray-700"
@@ -77,7 +77,7 @@ export default function ArticlePage() {
       </header>
 
       {/* 아티클 */}
-      <main className="max-w-[680px] mx-auto px-4 py-12">
+      <main className="max-w-4xl mx-auto px-4 py-12">
         <header className="mb-10">
           <h1
             className="text-[42px] font-bold leading-tight tracking-tight text-gray-900 mb-4"

@@ -12,6 +12,7 @@
   --editor-font-size: 16px;
   --editor-line-height: 1.6;
   --editor-paragraph-spacing: 12px;
+  --editor-letter-spacing: 0;
 }
 
 .dark {
@@ -85,7 +86,6 @@ body {
 
 /* X 아티클 스타일 에디터 */
 .article-editor {
-  max-width: 680px;
   margin: 0 auto;
 }
 
@@ -94,6 +94,7 @@ body {
   font-family: var(--editor-font-family);
   font-size: var(--editor-font-size);
   line-height: var(--editor-line-height);
+  letter-spacing: var(--editor-letter-spacing);
   color: #14171a;
   outline: none;
 }
@@ -201,6 +202,7 @@ body {
   font-family: var(--editor-font-family);
   font-size: var(--editor-font-size);
   line-height: var(--editor-line-height);
+  letter-spacing: var(--editor-letter-spacing);
   color: #14171a;
 }
 
