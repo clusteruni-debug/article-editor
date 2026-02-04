@@ -17,10 +17,10 @@ const FONTS = [
 ];
 
 const FONT_SIZES = [
-  { value: '14px', label: '14px (작게)' },
-  { value: '16px', label: '16px (기본)' },
-  { value: '18px', label: '18px (크게)' },
-  { value: '20px', label: '20px (아주 크게)' },
+  { value: '14px', label: '14px' },
+  { value: '16px', label: '16px' },
+  { value: '18px', label: '18px' },
+  { value: '20px', label: '20px' },
 ];
 
 const LETTER_SPACINGS = [
@@ -37,7 +37,7 @@ const LINE_HEIGHTS = [
 
 const PARAGRAPH_SPACINGS = [
   { value: '8px', label: '좁게' },
-  { value: '12px', label: '보통 (기본)' },
+  { value: '12px', label: '보통' },
   { value: '16px', label: '넓게' },
   { value: '24px', label: '아주 넓게' },
 ];
@@ -113,162 +113,131 @@ export function EditorSettings({ isOpen, onClose }: EditorSettingsProps) {
 
   if (!isOpen) return null;
 
+  // 프리셋 버튼 공통 스타일
+  const presetBtn = (isActive: boolean) =>
+    `px-3 py-1.5 text-xs rounded-md border transition-colors ${
+      isActive
+        ? 'bg-gray-900 text-white border-gray-900 dark:bg-gray-100 dark:text-gray-900 dark:border-gray-100'
+        : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+    }`;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">에디터 설정</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4 bg-gray-50/50 dark:bg-gray-800/50">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">글쓰기 설정</span>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {/* 글꼴 */}
+        <div className="flex items-center gap-3">
+          <label className="text-xs text-gray-500 dark:text-gray-400 w-14 shrink-0">글꼴</label>
+          <select
+            value={fontFamily}
+            onChange={(e) => handleFontChange(e.target.value)}
+            className="flex-1 p-1.5 border border-gray-200 dark:border-gray-600 rounded-md text-xs bg-white dark:bg-gray-800 focus:outline-none focus:border-gray-400"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            {FONTS.map((font) => (
+              <option key={font.value} value={font.value}>
+                {font.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="p-4 space-y-4">
-          {/* 폰트 선택 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              글꼴
-            </label>
-            <select
-              value={fontFamily}
-              onChange={(e) => handleFontChange(e.target.value)}
-              className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-gray-400"
-            >
-              {FONTS.map((font) => (
-                <option key={font.value} value={font.value}>
-                  {font.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 글자 크기 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              글자 크기
-            </label>
-            <div className="flex gap-2">
-              {FONT_SIZES.map((size) => (
-                <button
-                  key={size.value}
-                  onClick={() => handleSizeChange(size.value)}
-                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    fontSize === size.value
-                      ? 'bg-gray-900 text-white border-gray-900'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {size.label.split(' ')[0]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 자간 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              자간
-            </label>
-            <div className="flex gap-2">
-              {LETTER_SPACINGS.map((ls) => (
-                <button
-                  key={ls.value}
-                  onClick={() => handleLetterSpacingChange(ls.value)}
-                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    letterSpacing === ls.value
-                      ? 'bg-gray-900 text-white border-gray-900'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {ls.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 행간 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              행간
-            </label>
-            <div className="flex gap-2">
-              {LINE_HEIGHTS.map((lh) => (
-                <button
-                  key={lh.value}
-                  onClick={() => handleLineHeightChange(lh.value)}
-                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    lineHeight === lh.value
-                      ? 'bg-gray-900 text-white border-gray-900'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {lh.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 문단 간격 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              문단 간격
-            </label>
-            <div className="flex gap-2">
-              {PARAGRAPH_SPACINGS.map((spacing) => (
-                <button
-                  key={spacing.value}
-                  onClick={() => handleSpacingChange(spacing.value)}
-                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    paragraphSpacing === spacing.value
-                      ? 'bg-gray-900 text-white border-gray-900'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {spacing.label.split(' ')[0]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 미리보기 */}
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500 mb-2">미리보기</p>
-            <p
-              style={{
-                fontFamily: fontFamily,
-                fontSize: fontSize,
-                letterSpacing: letterSpacing,
-                lineHeight: lineHeight,
-                marginBottom: paragraphSpacing,
-              }}
-            >
-              가나다라마바사 ABCDEFG 1234567
-            </p>
-            <p
-              style={{
-                fontFamily: fontFamily,
-                fontSize: fontSize,
-                letterSpacing: letterSpacing,
-                lineHeight: lineHeight,
-              }}
-            >
-              두 번째 문단입니다. The quick brown fox.
-            </p>
+        {/* 글자 크기 */}
+        <div className="flex items-center gap-3">
+          <label className="text-xs text-gray-500 dark:text-gray-400 w-14 shrink-0">크기</label>
+          <div className="flex gap-1.5">
+            {FONT_SIZES.map((size) => (
+              <button
+                key={size.value}
+                onClick={() => handleSizeChange(size.value)}
+                className={presetBtn(fontSize === size.value)}
+              >
+                {size.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="p-4 border-t">
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+        {/* 자간 + 행간 (한 줄) */}
+        <div className="flex items-center gap-3">
+          <label className="text-xs text-gray-500 dark:text-gray-400 w-14 shrink-0">자간</label>
+          <div className="flex gap-1.5">
+            {LETTER_SPACINGS.map((ls) => (
+              <button
+                key={ls.value}
+                onClick={() => handleLetterSpacingChange(ls.value)}
+                className={presetBtn(letterSpacing === ls.value)}
+              >
+                {ls.label}
+              </button>
+            ))}
+          </div>
+          <div className="w-px h-5 bg-gray-200 dark:bg-gray-600 mx-1" />
+          <label className="text-xs text-gray-500 dark:text-gray-400 w-10 shrink-0">행간</label>
+          <div className="flex gap-1.5">
+            {LINE_HEIGHTS.map((lh) => (
+              <button
+                key={lh.value}
+                onClick={() => handleLineHeightChange(lh.value)}
+                className={presetBtn(lineHeight === lh.value)}
+              >
+                {lh.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 문단 간격 */}
+        <div className="flex items-center gap-3">
+          <label className="text-xs text-gray-500 dark:text-gray-400 w-14 shrink-0">문단</label>
+          <div className="flex gap-1.5">
+            {PARAGRAPH_SPACINGS.map((spacing) => (
+              <button
+                key={spacing.value}
+                onClick={() => handleSpacingChange(spacing.value)}
+                className={presetBtn(paragraphSpacing === spacing.value)}
+              >
+                {spacing.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 미리보기 */}
+        <div className="mt-2 p-3 bg-white dark:bg-gray-900 rounded-md border border-gray-100 dark:border-gray-700">
+          <p className="text-[10px] text-gray-400 mb-1">미리보기</p>
+          <p
+            style={{
+              fontFamily,
+              fontSize,
+              letterSpacing,
+              lineHeight,
+              marginBottom: paragraphSpacing,
+            }}
           >
-            완료
-          </button>
+            가나다라마바사 ABCDEFG 1234567
+          </p>
+          <p
+            style={{
+              fontFamily,
+              fontSize,
+              letterSpacing,
+              lineHeight,
+            }}
+          >
+            두 번째 문단입니다. The quick brown fox.
+          </p>
         </div>
       </div>
     </div>

@@ -1,26 +1,30 @@
 # X Article Editor - 변경 이력 및 로드맵
 
-## [2026-02-05] - 에디터 자간/행간 설정 + 너비 확장
+## [2026-02-05] - 에디터 설정을 툴바 인라인 패널로 이동
 ### 작업 내용
-- **자간(letter-spacing) 설정** 추가: 좁게(-0.03em) / 보통(0) / 넓게(0.05em) 프리셋
-- **행간(line-height) 설정** 추가: 좁게(1.4) / 보통(1.6) / 넓게(2.0) 프리셋
-- **CSS 변수** `--editor-letter-spacing` 추가, `.ProseMirror`과 `.article-content`에 적용
-- **localStorage 저장**: `editor-letter-spacing`, `editor-line-height` 키로 설정 유지
-- **미리보기**에 자간/행간 실시간 반영
-- **에디터 너비 확장**: main 영역 max-w-[680px] → max-w-4xl, header max-w-4xl → max-w-6xl
-- `.article-editor` CSS에서 max-width: 680px 제거 (Tailwind 클래스로 통일)
+- **에디터 설정 위치 변경**: 헤더 모달 → 에디터 툴바 끝에 톱니바퀴 버튼 + 인라인 패널
+  - 볼드/기울임/제목/목록/인용 버튼 옆에 설정 버튼 배치
+  - 클릭하면 툴바 바로 아래에 접이식 설정 패널이 열림 (전체 화면 모달 제거)
+- **자간/행간 설정** 추가: 좁게/보통/넓게 3단계 프리셋
+- **인라인 패널 레이아웃**: 자간과 행간을 한 줄에 나란히 배치하여 공간 절약
+- **CSS 변수** `--editor-letter-spacing` 추가
+- **너비 확장**: main max-w-[680px] → max-w-4xl, header → max-w-6xl
+- Ctrl+, 단축키는 editorRef.toggleSettings()를 통해 유지
 
 ### 수정 파일
+- `src/components/editor/EditorToolbar.tsx` (설정 토글 버튼 추가)
+- `src/components/editor/EditorSettings.tsx` (모달 → 인라인 패널 전환)
+- `src/components/editor/TiptapEditor.tsx` (설정 상태 관리 + 패널 렌더링)
+- `src/app/editor/page.tsx` (헤더 설정 버튼/모달 제거)
+- `src/app/editor/[id]/page.tsx` (헤더 설정 버튼/모달 제거)
 - `src/app/globals.css` (CSS 변수 + letter-spacing 적용)
-- `src/components/editor/EditorSettings.tsx` (자간/행간 프리셋 UI + 핸들러)
-- `src/app/editor/page.tsx` (너비 확장)
-- `src/app/editor/[id]/page.tsx` (너비 확장)
 - `src/app/article/[id]/page.tsx` (너비 확장)
 
 ### DB 변경: 없음
 
 ### 다음에 할 것
-- Vercel 배포 후 에디터 설정 모달에서 자간/행간 변경 → 실시간 반영 확인
+- Vercel 배포 후 툴바 설정 버튼 클릭 → 인라인 패널 펼침/접힘 확인
+- 자간/행간 변경 → 에디터 실시간 반영 확인
 
 ---
 

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, forwardRef, useImperativeHandle, useR
 import { editorExtensions } from '@/lib/tiptap/extensions';
 import { ImageUploadExtension, ImageUploadFn } from '@/lib/tiptap/imageUploadPlugin';
 import { EditorToolbar } from './EditorToolbar';
+import { EditorSettings } from './EditorSettings';
 import { EditorStats } from './EditorStats';
 import { uploadImage } from '@/lib/supabase/storage';
 
@@ -19,12 +20,14 @@ export interface TiptapEditorRef {
   getHTML: () => string;
   getText: () => string;
   setContent: (html: string) => void;
+  toggleSettings: () => void;
 }
 
 export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
   ({ content, onUpdate, articleId, title = '' }, ref) => {
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
     const handleImageUpload: ImageUploadFn = useCallback(
       async (file: File) => {
@@ -71,6 +74,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
           editor.commands.setContent(html);
         }
       },
+      toggleSettings: () => setShowSettings(prev => !prev),
     }), [editor]);
 
     // 기존 글 로드 시 콘텐츠 설정 (한 번만)
@@ -99,7 +103,16 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
 
     return (
       <div className="article-editor">
-        <EditorToolbar editor={editor} />
+        <EditorToolbar
+          editor={editor}
+          onToggleSettings={() => setShowSettings(prev => !prev)}
+          isSettingsOpen={showSettings}
+        />
+
+        <EditorSettings
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+        />
 
         {isUploading && (
           <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded-lg text-sm flex items-center gap-2">
