@@ -212,7 +212,7 @@ GEMINI_API_KEY=your_gemini_key_here
 
 ## 📁 핵심 파일 구조
 ```
-article-editor/
+x-article-editor/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── api/upload/         # 이미지 업로드 API
