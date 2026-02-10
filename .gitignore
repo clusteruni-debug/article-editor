@@ -46,3 +46,9 @@ next-env.d.ts
 
 # 세션 잠금
 .claude-lock
+
+# Windows 잔여 파일
+nul
+
+# Supabase 임시 파일
+supabase/.temp/
