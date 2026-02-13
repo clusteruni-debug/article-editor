@@ -84,7 +84,6 @@ export function useStats() {
   // 성과 기록 추가
   const addStats = useCallback(
     async (data: ArticleStatsInsert): Promise<ArticleStats | null> => {
-      console.log('[INFO] 성과 기록 추가:', data);
       setLoading(true);
       setError(null);
 
@@ -123,7 +122,6 @@ export function useStats() {
 
         if (err) throw err;
 
-        console.log('[SUCCESS] 성과 기록 추가 완료');
         return toStats(stats as StatsRow);
       } catch (err) {
         const message = err instanceof Error ? err.message : '성과 기록 추가 실패';
@@ -140,7 +138,6 @@ export function useStats() {
   // 성과 기록 수정
   const updateStats = useCallback(
     async (id: string, data: ArticleStatsUpdate): Promise<ArticleStats | null> => {
-      console.log('[INFO] 성과 기록 수정:', { id, ...data });
       setLoading(true);
       setError(null);
 
@@ -154,7 +151,6 @@ export function useStats() {
 
         if (err) throw err;
 
-        console.log('[SUCCESS] 성과 기록 수정 완료');
         return toStats(stats as StatsRow);
       } catch (err) {
         const message = err instanceof Error ? err.message : '성과 기록 수정 실패';
@@ -171,7 +167,6 @@ export function useStats() {
   // 아티클별 성과 조회
   const getStatsByArticle = useCallback(
     async (articleId: string): Promise<ArticleStats[]> => {
-      console.log('[INFO] 아티클 성과 조회:', articleId);
       setLoading(true);
       setError(null);
 
@@ -199,7 +194,6 @@ export function useStats() {
 
   // 전체 성과 조회 (대시보드용)
   const getAllStats = useCallback(async (): Promise<StatsWithArticle[]> => {
-    console.log('[INFO] 전체 성과 조회');
     setLoading(true);
     setError(null);
 
@@ -318,7 +312,6 @@ export function useStats() {
   // 성과 삭제
   const deleteStats = useCallback(
     async (id: string): Promise<boolean> => {
-      console.log('[INFO] 성과 기록 삭제:', id);
       setLoading(true);
       setError(null);
 
@@ -327,7 +320,6 @@ export function useStats() {
 
         if (err) throw err;
 
-        console.log('[SUCCESS] 성과 기록 삭제 완료');
         return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : '성과 삭제 실패';

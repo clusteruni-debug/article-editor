@@ -68,7 +68,6 @@ export function useArticle() {
   const supabase = createClient();
 
   const createArticle = useCallback(async (data: ArticleInsert): Promise<Article | null> => {
-    console.log('[INFO] 아티클 생성 시작:', { title: data.title, status: data.status });
     setLoading(true);
     setError(null);
 
@@ -85,8 +84,6 @@ export function useArticle() {
         series_order: data.series_order || null,
       };
 
-      console.log('[INFO] Supabase insert 요청:', insertData);
-
       const { data: article, error: err } = await supabase
         .from('articles')
         .insert(insertData)
@@ -98,7 +95,6 @@ export function useArticle() {
         throw err;
       }
 
-      console.log('[SUCCESS] 아티클 생성 완료:', article);
       return toArticle(article as ArticleRow);
     } catch (err) {
       const message = err instanceof Error ? err.message : '아티클 생성 실패';
@@ -111,7 +107,6 @@ export function useArticle() {
   }, [supabase]);
 
   const updateArticle = useCallback(async (id: string, data: ArticleUpdate): Promise<Article | null> => {
-    console.log('[INFO] 아티클 수정 시작:', { id, ...data });
     setLoading(true);
     setError(null);
 
@@ -140,7 +135,6 @@ export function useArticle() {
         throw err;
       }
 
-      console.log('[SUCCESS] 아티클 수정 완료:', article);
       return toArticle(article as ArticleRow);
     } catch (err) {
       const message = err instanceof Error ? err.message : '아티클 수정 실패';
@@ -153,7 +147,6 @@ export function useArticle() {
   }, [supabase]);
 
   const getArticle = useCallback(async (id: string): Promise<Article | null> => {
-    console.log('[INFO] 아티클 조회:', id);
     setLoading(true);
     setError(null);
 
@@ -169,7 +162,6 @@ export function useArticle() {
         throw err;
       }
 
-      console.log('[SUCCESS] 아티클 조회 완료');
       return toArticle(article as ArticleRow);
     } catch (err) {
       const message = err instanceof Error ? err.message : '아티클 조회 실패';
@@ -182,7 +174,6 @@ export function useArticle() {
   }, [supabase]);
 
   const getArticles = useCallback(async (): Promise<Article[]> => {
-    console.log('[INFO] 아티클 목록 조회');
     setLoading(true);
     setError(null);
 
@@ -198,7 +189,6 @@ export function useArticle() {
         throw err;
       }
 
-      console.log('[SUCCESS] 아티클 목록 조회 완료:', articles?.length || 0, '개');
       return (articles as ArticleRow[] || []).map(toArticle);
     } catch (err) {
       const message = err instanceof Error ? err.message : '아티클 목록 조회 실패';
@@ -213,7 +203,6 @@ export function useArticle() {
   // 페이지네이션 + 서버사이드 필터링 조회
   const getArticlesPaginated = useCallback(async (params: PaginationParams): Promise<PaginatedResult> => {
     const { page, pageSize, search, tag, status, sort = 'newest' } = params;
-    console.log('[INFO] 아티클 페이지네이션 조회:', params);
     setLoading(true);
     setError(null);
 
@@ -271,13 +260,6 @@ export function useArticle() {
 
       const totalCount = count ?? 0;
       const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-
-      console.log('[SUCCESS] 페이지네이션 조회 완료:', {
-        page,
-        totalCount,
-        totalPages,
-        fetched: articles?.length || 0,
-      });
 
       return {
         articles: (articles as ArticleRow[] || []).map(toArticle),
@@ -348,7 +330,6 @@ export function useArticle() {
 
   // 휴지통 목록 조회
   const getDeletedArticles = useCallback(async (): Promise<Article[]> => {
-    console.log('[INFO] 휴지통 목록 조회');
     setLoading(true);
     setError(null);
 
@@ -364,7 +345,6 @@ export function useArticle() {
         throw err;
       }
 
-      console.log('[SUCCESS] 휴지통 목록 조회 완료:', articles?.length || 0, '개');
       return (articles as ArticleRow[] || []).map(toArticle);
     } catch (err) {
       const message = err instanceof Error ? err.message : '휴지통 조회 실패';
@@ -378,7 +358,6 @@ export function useArticle() {
 
   // 휴지통으로 이동 (soft delete)
   const deleteArticle = useCallback(async (id: string): Promise<boolean> => {
-    console.log('[INFO] 아티클 휴지통 이동:', id);
     setLoading(true);
     setError(null);
 
@@ -393,7 +372,6 @@ export function useArticle() {
         throw err;
       }
 
-      console.log('[SUCCESS] 아티클 휴지통 이동 완료');
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : '삭제 실패';
@@ -407,7 +385,6 @@ export function useArticle() {
 
   // 휴지통에서 복원
   const restoreArticle = useCallback(async (id: string): Promise<boolean> => {
-    console.log('[INFO] 아티클 복원:', id);
     setLoading(true);
     setError(null);
 
@@ -422,7 +399,6 @@ export function useArticle() {
         throw err;
       }
 
-      console.log('[SUCCESS] 아티클 복원 완료');
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : '복원 실패';
@@ -436,7 +412,6 @@ export function useArticle() {
 
   // 영구 삭제
   const permanentlyDeleteArticle = useCallback(async (id: string): Promise<boolean> => {
-    console.log('[INFO] 아티클 영구 삭제:', id);
     setLoading(true);
     setError(null);
 
@@ -451,7 +426,6 @@ export function useArticle() {
         throw err;
       }
 
-      console.log('[SUCCESS] 아티클 영구 삭제 완료');
       return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : '영구 삭제 실패';

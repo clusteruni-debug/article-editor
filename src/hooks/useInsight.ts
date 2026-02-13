@@ -80,7 +80,6 @@ export function useInsight() {
 
   const createInsight = useCallback(
     async (data: InsightInsert): Promise<Insight | null> => {
-      console.log('[INFO] 인사이트 생성 시작:', data);
       setLoading(true);
       setError(null);
 
@@ -111,7 +110,6 @@ export function useInsight() {
           throw err;
         }
 
-        console.log('[SUCCESS] 인사이트 생성 완료:', insight);
         return toInsight(insight as InsightRow);
       } catch (err) {
         const message = err instanceof Error ? err.message : '인사이트 생성 실패';
@@ -127,7 +125,6 @@ export function useInsight() {
 
   const updateInsight = useCallback(
     async (id: string, data: InsightUpdate): Promise<Insight | null> => {
-      console.log('[INFO] 인사이트 수정 시작:', { id, ...data });
       setLoading(true);
       setError(null);
 
@@ -160,7 +157,6 @@ export function useInsight() {
           throw err;
         }
 
-        console.log('[SUCCESS] 인사이트 수정 완료:', insight);
         return toInsight(insight as InsightRow);
       } catch (err) {
         const message = err instanceof Error ? err.message : '인사이트 수정 실패';
@@ -176,7 +172,6 @@ export function useInsight() {
 
   const getInsight = useCallback(
     async (id: string): Promise<InsightWithArticle | null> => {
-      console.log('[INFO] 인사이트 조회:', id);
       setLoading(true);
       setError(null);
 
@@ -201,7 +196,6 @@ export function useInsight() {
           throw err;
         }
 
-        console.log('[SUCCESS] 인사이트 조회 완료');
         return toInsightWithArticle(insight as InsightWithArticleRow);
       } catch (err) {
         const message = err instanceof Error ? err.message : '인사이트 조회 실패';
@@ -221,7 +215,6 @@ export function useInsight() {
       action_type?: ActionType;
       search?: string;
     }): Promise<InsightWithArticle[]> => {
-      console.log('[INFO] 인사이트 목록 조회', options);
       setLoading(true);
       setError(null);
 
@@ -259,7 +252,6 @@ export function useInsight() {
           throw err;
         }
 
-        console.log('[SUCCESS] 인사이트 목록 조회 완료:', insights?.length || 0, '개');
         return ((insights as InsightWithArticleRow[]) || []).map(toInsightWithArticle);
       } catch (err) {
         const message = err instanceof Error ? err.message : '인사이트 목록 조회 실패';
@@ -275,7 +267,6 @@ export function useInsight() {
 
   const deleteInsight = useCallback(
     async (id: string): Promise<boolean> => {
-      console.log('[INFO] 인사이트 삭제:', id);
       setLoading(true);
       setError(null);
 
@@ -287,7 +278,6 @@ export function useInsight() {
           throw err;
         }
 
-        console.log('[SUCCESS] 인사이트 삭제 완료');
         return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : '인사이트 삭제 실패';
@@ -303,7 +293,6 @@ export function useInsight() {
 
   const linkArticle = useCallback(
     async (insightId: string, articleId: string): Promise<boolean> => {
-      console.log('[INFO] 아티클 연결:', { insightId, articleId });
       setLoading(true);
       setError(null);
 
@@ -324,7 +313,6 @@ export function useInsight() {
 
         if (err2) throw err2;
 
-        console.log('[SUCCESS] 아티클 연결 완료');
         return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : '아티클 연결 실패';
@@ -340,7 +328,6 @@ export function useInsight() {
 
   const updateStatus = useCallback(
     async (id: string, status: InsightStatus): Promise<boolean> => {
-      console.log('[INFO] 인사이트 상태 변경:', { id, status });
       const result = await updateInsight(id, { status });
       return result !== null;
     },
@@ -349,7 +336,6 @@ export function useInsight() {
 
   const addPlatform = useCallback(
     async (id: string, platform: Platform): Promise<boolean> => {
-      console.log('[INFO] 플랫폼 추가:', { id, platform });
       setLoading(true);
       setError(null);
 
@@ -365,7 +351,6 @@ export function useInsight() {
 
         const currentPlatforms = (insight?.platforms_published as Platform[]) || [];
         if (currentPlatforms.includes(platform)) {
-          console.log('[INFO] 이미 추가된 플랫폼:', platform);
           return true;
         }
 
@@ -376,7 +361,6 @@ export function useInsight() {
 
         if (updateErr) throw updateErr;
 
-        console.log('[SUCCESS] 플랫폼 추가 완료');
         return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : '플랫폼 추가 실패';

@@ -76,7 +76,6 @@ export function useAutoSave({
           lastSaved: new Date(),
           hasUnsavedChanges: false,
         });
-        console.log('[AUTO-SAVE] 자동 저장 완료');
         return true;
       }
     } catch (err) {

@@ -26,7 +26,6 @@ export function useVersion() {
       if (fetchError) {
         // 테이블이 없는 경우 빈 배열 반환
         if (fetchError.code === '42P01') {
-          console.log('article_versions 테이블이 없습니다. 마이그레이션을 실행하세요.');
           return [];
         }
         throw fetchError;
@@ -82,7 +81,6 @@ export function useVersion() {
       if (insertError) {
         // 테이블이 없는 경우
         if (insertError.code === '42P01') {
-          console.log('article_versions 테이블이 없습니다. 마이그레이션을 실행하세요.');
           return null;
         }
         throw insertError;

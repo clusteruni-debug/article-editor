@@ -31,13 +31,11 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
 
     const handleImageUpload: ImageUploadFn = useCallback(
       async (file: File) => {
-        console.log('[INFO] TiptapEditor: 이미지 업로드 요청', file.name);
         setUploadError(null);
         setIsUploading(true);
 
         try {
           const url = await uploadImage(file, articleId);
-          console.log('[SUCCESS] TiptapEditor: 이미지 업로드 성공', url);
           return url;
         } catch (error) {
           const message = error instanceof Error ? error.message : '이미지 업로드 실패';

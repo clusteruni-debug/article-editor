@@ -49,7 +49,6 @@ export function useSeries() {
   // 시리즈 생성
   const createSeries = useCallback(
     async (data: SeriesInsert): Promise<Series | null> => {
-      console.log('[INFO] 시리즈 생성:', data);
       setLoading(true);
       setError(null);
 
@@ -69,7 +68,6 @@ export function useSeries() {
 
         if (err) throw err;
 
-        console.log('[SUCCESS] 시리즈 생성 완료');
         return toSeries(series as SeriesRow);
       } catch (err) {
         const message = err instanceof Error ? err.message : '시리즈 생성 실패';
@@ -86,7 +84,6 @@ export function useSeries() {
   // 시리즈 수정
   const updateSeries = useCallback(
     async (id: string, data: SeriesUpdate): Promise<Series | null> => {
-      console.log('[INFO] 시리즈 수정:', { id, ...data });
       setLoading(true);
       setError(null);
 
@@ -100,7 +97,6 @@ export function useSeries() {
 
         if (err) throw err;
 
-        console.log('[SUCCESS] 시리즈 수정 완료');
         return toSeries(series as SeriesRow);
       } catch (err) {
         const message = err instanceof Error ? err.message : '시리즈 수정 실패';
@@ -116,7 +112,6 @@ export function useSeries() {
 
   // 시리즈 목록 조회 (글 포함)
   const getSeriesList = useCallback(async (): Promise<SeriesWithArticles[]> => {
-    console.log('[INFO] 시리즈 목록 조회');
     setLoading(true);
     setError(null);
 
@@ -152,7 +147,6 @@ export function useSeries() {
         });
       }
 
-      console.log('[SUCCESS] 시리즈 목록 조회 완료:', result.length, '개');
       return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : '시리즈 목록 조회 실패';
@@ -167,7 +161,6 @@ export function useSeries() {
   // 단일 시리즈 조회
   const getSeries = useCallback(
     async (id: string): Promise<SeriesWithArticles | null> => {
-      console.log('[INFO] 시리즈 조회:', id);
       setLoading(true);
       setError(null);
 
@@ -212,7 +205,6 @@ export function useSeries() {
   // 시리즈에 글 추가
   const addArticleToSeries = useCallback(
     async (seriesId: string, articleId: string): Promise<boolean> => {
-      console.log('[INFO] 시리즈에 글 추가:', { seriesId, articleId });
       setLoading(true);
       setError(null);
 
@@ -235,7 +227,6 @@ export function useSeries() {
 
         if (err) throw err;
 
-        console.log('[SUCCESS] 시리즈에 글 추가 완료');
         return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : '시리즈 글 추가 실패';
@@ -252,7 +243,6 @@ export function useSeries() {
   // 시리즈에서 글 제거
   const removeArticleFromSeries = useCallback(
     async (articleId: string): Promise<boolean> => {
-      console.log('[INFO] 시리즈에서 글 제거:', articleId);
       setLoading(true);
       setError(null);
 
@@ -264,7 +254,6 @@ export function useSeries() {
 
         if (err) throw err;
 
-        console.log('[SUCCESS] 시리즈에서 글 제거 완료');
         return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : '시리즈 글 제거 실패';
@@ -281,7 +270,6 @@ export function useSeries() {
   // 시리즈 글 순서 변경
   const reorderArticles = useCallback(
     async (seriesId: string, articleIds: string[]): Promise<boolean> => {
-      console.log('[INFO] 시리즈 글 순서 변경:', { seriesId, articleIds });
       setLoading(true);
       setError(null);
 
@@ -295,7 +283,6 @@ export function useSeries() {
           if (err) throw err;
         }
 
-        console.log('[SUCCESS] 시리즈 글 순서 변경 완료');
         return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : '순서 변경 실패';
@@ -312,7 +299,6 @@ export function useSeries() {
   // 시리즈 삭제
   const deleteSeries = useCallback(
     async (id: string): Promise<boolean> => {
-      console.log('[INFO] 시리즈 삭제:', id);
       setLoading(true);
       setError(null);
 
@@ -328,7 +314,6 @@ export function useSeries() {
 
         if (err) throw err;
 
-        console.log('[SUCCESS] 시리즈 삭제 완료');
         return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : '시리즈 삭제 실패';

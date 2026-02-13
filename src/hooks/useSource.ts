@@ -40,7 +40,6 @@ export function useSource() {
 
   // 전체 소스 목록 조회 (이름순 정렬)
   const getSources = useCallback(async (): Promise<Source[]> => {
-    console.log('[INFO] 소스 목록 조회');
     setLoading(true);
     setError(null);
 
@@ -55,7 +54,6 @@ export function useSource() {
         throw err;
       }
 
-      console.log('[SUCCESS] 소스 목록 조회 완료:', data?.length || 0, '개');
       return ((data as SourceRow[]) || []).map(toSource);
     } catch (err) {
       const message = err instanceof Error ? err.message : '소스 목록 조회 실패';
@@ -70,7 +68,6 @@ export function useSource() {
   // 소스 생성
   const createSource = useCallback(
     async (data: SourceInsert): Promise<Source | null> => {
-      console.log('[INFO] 소스 생성 시작:', data);
       setLoading(true);
       setError(null);
 
@@ -97,7 +94,6 @@ export function useSource() {
           throw err;
         }
 
-        console.log('[SUCCESS] 소스 생성 완료:', source);
         return toSource(source as SourceRow);
       } catch (err) {
         const message = err instanceof Error ? err.message : '소스 생성 실패';
@@ -114,7 +110,6 @@ export function useSource() {
   // 소스 수정
   const updateSource = useCallback(
     async (id: string, data: SourceUpdate): Promise<Source | null> => {
-      console.log('[INFO] 소스 수정 시작:', { id, ...data });
       setLoading(true);
       setError(null);
 
@@ -140,7 +135,6 @@ export function useSource() {
           throw err;
         }
 
-        console.log('[SUCCESS] 소스 수정 완료:', source);
         return toSource(source as SourceRow);
       } catch (err) {
         const message = err instanceof Error ? err.message : '소스 수정 실패';
@@ -157,7 +151,6 @@ export function useSource() {
   // 소스 삭제
   const deleteSource = useCallback(
     async (id: string): Promise<boolean> => {
-      console.log('[INFO] 소스 삭제:', id);
       setLoading(true);
       setError(null);
 
@@ -169,7 +162,6 @@ export function useSource() {
           throw err;
         }
 
-        console.log('[SUCCESS] 소스 삭제 완료');
         return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : '소스 삭제 실패';
@@ -185,7 +177,6 @@ export function useSource() {
 
   // 소스별 인사이트 수 통계
   const getSourceStats = useCallback(async (): Promise<SourceStats[]> => {
-    console.log('[INFO] 소스 통계 조회');
     setLoading(true);
     setError(null);
 
@@ -219,7 +210,6 @@ export function useSource() {
         insight_count: countMap.get(row.id) || 0,
       }));
 
-      console.log('[SUCCESS] 소스 통계 조회 완료:', stats.length, '개');
       return stats;
     } catch (err) {
       const message = err instanceof Error ? err.message : '소스 통계 조회 실패';
