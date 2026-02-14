@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateArticleDraft } from '@/lib/gemini/client';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
+    // 인증 확인
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { keyword, summary, actionType } = body;
 

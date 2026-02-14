@@ -63,6 +63,15 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    // 인증 확인
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
     // 파일 업로드 - MIME 타입에서 확장자 결정 (파일명 조작 방지)
     const fileExt = MIME_TO_EXT[file.type] || 'jpg';
     const fileName = `${nanoid()}.${fileExt}`;
