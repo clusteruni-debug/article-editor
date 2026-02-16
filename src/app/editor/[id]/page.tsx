@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { JSONContent } from '@tiptap/react';
 import { TiptapEditor, TiptapEditorRef } from '@/components/editor/TiptapEditor';
@@ -31,7 +31,7 @@ export default function EditArticlePage() {
   const [copied, setCopied] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const extractTextContent = useCallback((json: JSONContent): string => {
+  function extractTextContent(json: JSONContent): string {
     let text = '';
     if (json.content) {
       for (const node of json.content) {
@@ -44,7 +44,7 @@ export default function EditArticlePage() {
       }
     }
     return text.trim();
-  }, []);
+  }
 
   // 자동 저장 훅
   const { isSaving: isAutoSaving, lastSaved, hasUnsavedChanges, initializeSavedState } = useAutoSave({
@@ -179,7 +179,7 @@ export default function EditArticlePage() {
 
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       const text = title + '\n\n' + editorRef.current.getText();
       await navigator.clipboard.writeText(text);
       setCopied(true);

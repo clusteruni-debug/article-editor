@@ -32,6 +32,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     // localStorage에서 테마 설정 불러오기
     const stored = localStorage.getItem('theme') as Theme | null;
     if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setThemeState(stored);
     }
   }, []);

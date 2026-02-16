@@ -34,6 +34,7 @@ export function VersionHistory({
 
   useEffect(() => {
     if (isOpen && articleId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadVersions();
     }
   }, [isOpen, articleId]);

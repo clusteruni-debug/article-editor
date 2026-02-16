@@ -1,6 +1,7 @@
 'use client';
 
 import { Editor } from '@tiptap/react';
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils/cn';
 
 interface EditorToolbarProps {
@@ -9,20 +10,15 @@ interface EditorToolbarProps {
   isSettingsOpen?: boolean;
 }
 
-export function EditorToolbar({ editor, onToggleSettings, isSettingsOpen }: EditorToolbarProps) {
-  if (!editor) return null;
+interface ToolbarButtonProps {
+  onClick: () => void;
+  isActive?: boolean;
+  children: ReactNode;
+  title: string;
+}
 
-  const ToolbarButton = ({
-    onClick,
-    isActive,
-    children,
-    title,
-  }: {
-    onClick: () => void;
-    isActive?: boolean;
-    children: React.ReactNode;
-    title: string;
-  }) => (
+function ToolbarButton({ onClick, isActive, children, title }: ToolbarButtonProps) {
+  return (
     <button
       type="button"
       onClick={onClick}
@@ -35,8 +31,14 @@ export function EditorToolbar({ editor, onToggleSettings, isSettingsOpen }: Edit
       {children}
     </button>
   );
+}
 
-  const Divider = () => <div className="w-px h-6 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2 hidden sm:block" />;
+function Divider() {
+  return <div className="w-px h-6 bg-gray-200 dark:bg-gray-600 mx-1 sm:mx-2 hidden sm:block" />;
+}
+
+export function EditorToolbar({ editor, onToggleSettings, isSettingsOpen }: EditorToolbarProps) {
+  if (!editor) return null;
 
   return (
     <div className="flex items-center gap-0.5 sm:gap-1 border-b border-gray-200 dark:border-gray-700 pb-3 mb-6 overflow-x-auto scrollbar-hide">

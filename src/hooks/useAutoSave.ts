@@ -45,6 +45,7 @@ export function useAutoSave({
       currentContent !== lastSavedContentRef.current ||
       title !== lastSavedTitleRef.current;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState((prev) => ({ ...prev, hasUnsavedChanges: hasChanges }));
   }, [content, title]);
 

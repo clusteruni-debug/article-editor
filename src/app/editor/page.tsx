@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
+import { useState, useRef, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { nanoid } from 'nanoid';
@@ -45,10 +45,40 @@ function EditorContent() {
   const [copied, setCopied] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
+  // 마크다운을 간단한 HTML로 변환
+  function markdownToHtml(md: string): string {
+    return md
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/^(.+)$/gim, '<p>$1</p>')
+      .replace(/<p><h/g, '<h')
+      .replace(/<\/h(\d)><\/p>/g, '</h$1>');
+  }
+
+  function extractTextContent(json: JSONContent): string {
+    let text = '';
+    if (json.content) {
+      for (const node of json.content) {
+        if (node.type === 'text' && node.text) {
+          text += node.text;
+        } else if (node.content) {
+          text += extractTextContent(node);
+        }
+        text += ' ';
+      }
+    }
+    return text.trim();
+  }
+
   // 인사이트/AI에서 시작한 경우 초기화
   useEffect(() => {
     // AI 생성 콘텐츠가 있으면 우선 사용
     if (aiTitle) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(aiTitle);
     } else if (insightKeyword && !title) {
       setTitle(insightKeyword);
@@ -65,36 +95,7 @@ function EditorContent() {
     if (aiTags) {
       setTags(aiTags.split(',').filter(Boolean));
     }
-  }, [aiTitle, aiContent, aiTags, insightKeyword]);
-
-  // 마크다운을 간단한 HTML로 변환
-  const markdownToHtml = (md: string): string => {
-    return md
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/^(.+)$/gim, '<p>$1</p>')
-      .replace(/<p><h/g, '<h')
-      .replace(/<\/h(\d)><\/p>/g, '</h$1>');
-  };
-
-  const extractTextContent = useCallback((json: JSONContent): string => {
-    let text = '';
-    if (json.content) {
-      for (const node of json.content) {
-        if (node.type === 'text' && node.text) {
-          text += node.text;
-        } else if (node.content) {
-          text += extractTextContent(node);
-        }
-        text += ' ';
-      }
-    }
-    return text.trim();
-  }, []);
+  }, [aiTitle, aiContent, aiTags, insightKeyword, title]);
 
   // 변경사항 있는지 확인 (제목이나 내용이 있으면 변경된 것으로 간주)
   const hasContent = useMemo(() => {
@@ -228,7 +229,7 @@ function EditorContent() {
       showSuccess('클립보드에 복사되었습니다');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       // 폴백: 일반 텍스트로 복사
       const text = title + '\n\n' + editorRef.current.getText();
       await navigator.clipboard.writeText(text);

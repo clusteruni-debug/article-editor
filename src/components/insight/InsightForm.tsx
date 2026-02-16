@@ -44,6 +44,7 @@ export function InsightForm({ insight, onSubmit, onCancel, isLoading, existingTa
 
   useEffect(() => {
     if (insight) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setKeyword(insight.keyword);
       setSummary(insight.summary || '');
       setSource(insight.source || '');

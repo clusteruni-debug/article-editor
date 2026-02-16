@@ -49,6 +49,14 @@ export function EditorSettings({ isOpen, onClose }: EditorSettingsProps) {
   const [lineHeight, setLineHeight] = useState('1.6');
   const [paragraphSpacing, setParagraphSpacing] = useState('12px');
 
+  function applySettings(font: string, size: string, ls: string, lh: string, spacing: string) {
+    document.documentElement.style.setProperty('--editor-font-family', font);
+    document.documentElement.style.setProperty('--editor-font-size', size);
+    document.documentElement.style.setProperty('--editor-letter-spacing', ls);
+    document.documentElement.style.setProperty('--editor-line-height', lh);
+    document.documentElement.style.setProperty('--editor-paragraph-spacing', spacing);
+  }
+
   // 로컬 스토리지에서 설정 불러오기
   useEffect(() => {
     const savedFont = localStorage.getItem('editor-font-family');
@@ -57,6 +65,7 @@ export function EditorSettings({ isOpen, onClose }: EditorSettingsProps) {
     const savedLineHeight = localStorage.getItem('editor-line-height');
     const savedSpacing = localStorage.getItem('editor-paragraph-spacing');
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedFont) setFontFamily(savedFont);
     if (savedSize) setFontSize(savedSize);
     if (savedLetterSpacing) setLetterSpacing(savedLetterSpacing);
@@ -72,14 +81,6 @@ export function EditorSettings({ isOpen, onClose }: EditorSettingsProps) {
       savedSpacing || paragraphSpacing
     );
   }, []);
-
-  const applySettings = (font: string, size: string, ls: string, lh: string, spacing: string) => {
-    document.documentElement.style.setProperty('--editor-font-family', font);
-    document.documentElement.style.setProperty('--editor-font-size', size);
-    document.documentElement.style.setProperty('--editor-letter-spacing', ls);
-    document.documentElement.style.setProperty('--editor-line-height', lh);
-    document.documentElement.style.setProperty('--editor-paragraph-spacing', spacing);
-  };
 
   const handleFontChange = (value: string) => {
     setFontFamily(value);

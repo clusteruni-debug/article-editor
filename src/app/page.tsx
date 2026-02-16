@@ -122,6 +122,7 @@ export default function HomePage() {
   }, [getArticlesPaginated, currentPage, debouncedSearch, selectedTag, statusFilter, sortOption]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadArticles();
   }, [loadArticles]);
 
@@ -135,6 +136,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!debouncedSearch && !selectedTag && statusFilter === 'all') {
       // 첫 페이지 데이터로 간략히 대체 (RecycleSuggestions는 날짜만 봄)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAllArticlesForRecycle(result.articles);
     }
   }, [result.articles, debouncedSearch, selectedTag, statusFilter]);

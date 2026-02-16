@@ -1,7 +1,7 @@
 'use client';
 
 import { Editor } from '@tiptap/react';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 
 interface EditorStatsProps {
   editor: Editor | null;
@@ -11,17 +11,14 @@ interface EditorStatsProps {
 const GOAL_OPTIONS = [0, 300, 500, 1000, 1500, 2000, 3000];
 
 export function EditorStats({ editor, title }: EditorStatsProps) {
-  const [dailyGoal, setDailyGoal] = useState(0);
-  const [showGoalPicker, setShowGoalPicker] = useState(false);
-  const [goalReached, setGoalReached] = useState(false);
-
-  // 로컬 스토리지에서 목표 불러오기
-  useEffect(() => {
+  const [dailyGoal, setDailyGoal] = useState(() => {
+    if (typeof window === 'undefined') return 0;
     const saved = localStorage.getItem('writingGoal');
-    if (saved) {
-      setDailyGoal(parseInt(saved, 10));
-    }
-  }, []);
+    if (!saved) return 0;
+    const parsed = parseInt(saved, 10);
+    return Number.isFinite(parsed) ? parsed : 0;
+  });
+  const [showGoalPicker, setShowGoalPicker] = useState(false);
 
   const stats = useMemo(() => {
     if (!editor) {
@@ -45,18 +42,12 @@ export function EditorStats({ editor, title }: EditorStatsProps) {
     const readingTime = Math.max(1, Math.ceil(charCount / 400));
 
     return { charCount, wordCount, readingTime };
-  }, [editor, title, editor?.getText()]);
+  }, [editor, title]);
 
-  // 목표 달성 체크
-  useEffect(() => {
-    if (dailyGoal > 0 && stats.charCount >= dailyGoal && !goalReached) {
-      setGoalReached(true);
-    }
-  }, [stats.charCount, dailyGoal, goalReached]);
+  const goalReached = dailyGoal > 0 && stats.charCount >= dailyGoal;
 
   const handleGoalChange = (goal: number) => {
     setDailyGoal(goal);
-    setGoalReached(false);
     localStorage.setItem('writingGoal', goal.toString());
     setShowGoalPicker(false);
   };

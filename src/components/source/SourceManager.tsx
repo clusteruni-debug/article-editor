@@ -45,6 +45,7 @@ export function SourceManager({
   // 편집 모드 진입 시 폼 채우기
   useEffect(() => {
     if (editingSource) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormName(editingSource.name);
       setFormUrl(editingSource.url || '');
       setFormDescription(editingSource.description || '');
