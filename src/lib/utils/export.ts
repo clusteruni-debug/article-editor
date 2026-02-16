@@ -1,4 +1,3 @@
-import { Article } from '@/types/article';
 import { JSONContent } from '@tiptap/react';
 
 // JSON Content를 Markdown으로 변환
@@ -134,7 +133,7 @@ export function exportAsHTML(article: {
   html: string;
   tags?: string[];
 }) {
-  let htmlContent = `<!DOCTYPE html>
+  const htmlContent = `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">

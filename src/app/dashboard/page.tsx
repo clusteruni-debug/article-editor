@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useStats } from '@/hooks/useStats';
 import { useArticle } from '@/hooks/useArticle';
 import { StatsForm } from '@/components/stats/StatsForm';
@@ -34,11 +34,7 @@ export default function DashboardPage() {
   const [selectedPlatform, setSelectedPlatform] = useState<StatsPlatform | 'all'>('all');
   const [allArticles, setAllArticles] = useState<Article[]>([]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const [statsData, aggData, articlesData] = await Promise.all([
       getAllStats(),
       getAggregatedStats(),
@@ -48,7 +44,12 @@ export default function DashboardPage() {
     setAggregated(aggData);
     setAllArticles(articlesData);
     setArticles(articlesData.filter((a) => a.status === 'published'));
-  };
+  }, [getAllStats, getAggregatedStats, getArticles]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData();
+  }, [loadData]);
 
   // 글쓰기 활동 통계 계산
   const writingStats = useMemo(() => {

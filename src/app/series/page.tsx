@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSeries } from '@/hooks/useSeries';
 import { useArticle } from '@/hooks/useArticle';
@@ -34,18 +34,19 @@ export default function SeriesPage() {
   const [formDescription, setFormDescription] = useState('');
   const [formStatus, setFormStatus] = useState<SeriesStatus>('active');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const [seriesData, articlesData] = await Promise.all([
       getSeriesList(),
       getArticles(),
     ]);
     setSeriesList(seriesData);
     setArticles(articlesData);
-  };
+  }, [getSeriesList, getArticles]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadData();
+  }, [loadData]);
 
   const handleCreateSeries = async () => {
     if (!formTitle.trim()) return;
