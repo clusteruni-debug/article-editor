@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { nanoid } from 'nanoid';
 
 const BUCKET_NAME = 'article-images';
@@ -20,6 +19,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const articleId = formData.get('articleId') as string | null;
+    const safeArticleId = articleId?.replace(/[^a-zA-Z0-9-_]/g, '') || '';
 
     // 파일 검증
     if (!file) {
@@ -41,27 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Supabase 클라이언트 생성
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Server Action에서는 쿠키 설정 불가
-            }
-          },
-        },
-      }
-    );
+    const supabase = await createServerSupabaseClient();
 
     // 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -72,11 +52,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // articleId가 지정된 경우 업로드 대상 글 소유권 확인
+    if (safeArticleId) {
+      const { data: article, error: articleError } = await supabase
+        .from('articles')
+        .select('id, author_id')
+        .eq('id', safeArticleId)
+        .eq('author_id', user.id)
+        .maybeSingle();
+
+      if (articleError) {
+        return NextResponse.json(
+          { error: '업로드 권한 확인 중 오류가 발생했습니다.' },
+          { status: 500 }
+        );
+      }
+
+      if (!article) {
+        return NextResponse.json(
+          { error: '업로드 권한이 없습니다.' },
+          { status: 403 }
+        );
+      }
+    }
+
     // 파일 업로드 - MIME 타입에서 확장자 결정 (파일명 조작 방지)
     const fileExt = MIME_TO_EXT[file.type] || 'jpg';
     const fileName = `${nanoid()}.${fileExt}`;
     // articleId 검증 (경로 탐색 공격 방지)
-    const safeArticleId = articleId?.replace(/[^a-zA-Z0-9-_]/g, '') || '';
     const filePath = safeArticleId ? `${safeArticleId}/${fileName}` : fileName;
 
     const arrayBuffer = await file.arrayBuffer();

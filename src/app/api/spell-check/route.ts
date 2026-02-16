@@ -13,7 +13,7 @@ const SPELL_RULES: { pattern: RegExp; suggestion: string; info: string }[] = [
   { pattern: /됬/g, suggestion: '됐', info: '"되었"의 줄임말은 "됐"입니다' },
   { pattern: /안됀다/g, suggestion: '안 된다', info: '"안"과 "된다"는 띄어 씁니다' },
   { pattern: /몇일/g, suggestion: '며칠', info: '"며칠"이 올바른 표현입니다' },
-  { pattern: /왠지/g, suggestion: '웬지', info: '"왜인지"의 줄임말은 "웬지"입니다' },
+  { pattern: /웬지/g, suggestion: '왠지', info: '"왜인지"의 줄임말은 "왠지"입니다' },
   { pattern: /어의없/g, suggestion: '어이없', info: '"어이"가 올바른 표현입니다' },
   { pattern: /금새/g, suggestion: '금세', info: '"금시에"의 줄임말은 "금세"입니다' },
   { pattern: /희안/g, suggestion: '희한', info: '"희한하다"가 올바른 표현입니다' },
