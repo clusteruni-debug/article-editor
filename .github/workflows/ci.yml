@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build
+      - run: npx tsc --noEmit
+      - name: Forbidden pattern scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="src"
+          COMMON='sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{36,}|gho_[a-zA-Z0-9]{36,}'
+          grep -RInE "$COMMON" "$TARGET" \
+            --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.html" --include="*.py" \
+            --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=build --exclude-dir=.next || true
+          grep -RInE "\.env(\.|$|[^a-zA-Z0-9_])" "$TARGET" \
+            --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" || true
+          grep -RInE ":\s*any\b" "$TARGET" --include="*.ts" --include="*.tsx" || true
+
+          if grep -RInE "$COMMON|\.env(\.|$|[^a-zA-Z0-9_])|:\s*any\b" "$TARGET" \
+            --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
+            --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=build --exclude-dir=.next; then
+            echo "Forbidden patterns found."
+            exit 1
+          fi
