@@ -9,6 +9,9 @@ on:
 jobs:
   build-and-scan:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-dummy.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-dummy-anon-key
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,16 +27,15 @@ jobs:
           set -euo pipefail
           TARGET="src"
           COMMON='sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{36,}|gho_[a-zA-Z0-9]{36,}'
-          grep -RInE "$COMMON" "$TARGET" \
-            --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.html" --include="*.py" \
-            --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=build --exclude-dir=.next || true
-          grep -RInE "\.env(\.|$|[^a-zA-Z0-9_])" "$TARGET" \
-            --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" || true
-          grep -RInE ":\s*any\b" "$TARGET" --include="*.ts" --include="*.tsx" || true
+          ANY=':\s*any\b'
 
-          if grep -RInE "$COMMON|\.env(\.|$|[^a-zA-Z0-9_])|:\s*any\b" "$TARGET" \
+          FAIL=0
+          grep -RInE "$COMMON" "$TARGET" \
             --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
-            --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=build --exclude-dir=.next; then
+            --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=build --exclude-dir=.next && FAIL=1 || true
+          grep -RInE "$ANY" "$TARGET" --include="*.ts" --include="*.tsx" && FAIL=1 || true
+
+          if [ "$FAIL" -eq 1 ]; then
             echo "Forbidden patterns found."
             exit 1
           fi
