@@ -2,14 +2,11 @@
 
 import { useState, useRef, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { nanoid } from 'nanoid';
 import { JSONContent } from '@tiptap/react';
 import { TiptapEditor, TiptapEditorRef } from '@/components/editor/TiptapEditor';
 import { TitleInput } from '@/components/editor/TitleInput';
 import { TagInput } from '@/components/editor/TagInput';
-import { SpellChecker } from '@/components/editor/SpellChecker';
-import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { useArticle } from '@/hooks/useArticle';
@@ -17,6 +14,7 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { useInsight } from '@/hooks/useInsight';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { exportAsJSON, exportAsMarkdown, exportAsHTML } from '@/lib/utils/export';
+import { EditorHeader, EditorInsightBanner } from './components';
 
 function EditorContent() {
   const router = useRouter();
@@ -76,7 +74,6 @@ function EditorContent() {
 
   // 인사이트/AI에서 시작한 경우 초기화
   useEffect(() => {
-    // AI 생성 콘텐츠가 있으면 우선 사용
     if (aiTitle) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(aiTitle);
@@ -84,20 +81,17 @@ function EditorContent() {
       setTitle(insightKeyword);
     }
 
-    // AI 생성 본문
     if (aiContent && editorRef.current) {
-      // 마크다운을 HTML로 변환 후 에디터에 삽입
       const htmlContent = markdownToHtml(aiContent);
       editorRef.current.setContent(htmlContent);
     }
 
-    // AI 생성 태그
     if (aiTags) {
       setTags(aiTags.split(',').filter(Boolean));
     }
   }, [aiTitle, aiContent, aiTags, insightKeyword, title]);
 
-  // 변경사항 있는지 확인 (제목이나 내용이 있으면 변경된 것으로 간주)
+  // 변경사항 있는지 확인
   const hasContent = useMemo(() => {
     return title.trim().length > 0 || (content.content && content.content.length > 0);
   }, [title, content]);
@@ -110,14 +104,12 @@ function EditorContent() {
     contentText: extractTextContent(content),
     onSave: async (data) => {
       if (savedArticleId) {
-        // 이미 생성된 아티클 업데이트
         const result = await updateArticle(savedArticleId, {
           ...data,
           status: 'draft',
         });
         return !!result;
       } else {
-        // 새 아티클 생성 (첫 자동 저장)
         const result = await createArticle({
           ...data,
           status: 'draft',
@@ -130,20 +122,18 @@ function EditorContent() {
         return false;
       }
     },
-    interval: 30000, // 30초
-    enabled: title.trim().length > 0, // 제목이 있을 때만 자동 저장
+    interval: 30000,
+    enabled: title.trim().length > 0,
   });
 
   // 페이지 이탈 시 경고
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // 저장되지 않은 변경사항이 있고, 내용이 있을 때만 경고
       if (hasContent && !savedArticleId) {
         e.preventDefault();
         e.returnValue = '';
         return '';
       }
-      // 자동 저장 후에도 추가 변경사항이 있으면 경고
       if (hasUnsavedChanges) {
         e.preventDefault();
         e.returnValue = '';
@@ -165,7 +155,6 @@ function EditorContent() {
 
     let article;
     if (savedArticleId) {
-      // 이미 자동 저장으로 생성된 경우 업데이트
       article = await updateArticle(savedArticleId, {
         title: title.trim(),
         content,
@@ -176,7 +165,6 @@ function EditorContent() {
         linked_insight_id: linkedInsightId || undefined,
       });
     } else {
-      // 새로 생성
       article = await createArticle({
         title: title.trim(),
         content,
@@ -190,7 +178,6 @@ function EditorContent() {
     setSaving(false);
 
     if (article) {
-      // 인사이트와 연결
       if (linkedInsightId) {
         await linkArticle(linkedInsightId, article.id);
       }
@@ -215,7 +202,6 @@ function EditorContent() {
     const fullHtml = titleHtml + html;
 
     try {
-      // 서식이 유지되는 HTML로 복사
       const blob = new Blob([fullHtml], { type: 'text/html' });
       const plainBlob = new Blob([title + '\n\n' + editorRef.current.getText()], { type: 'text/plain' });
 
@@ -230,7 +216,6 @@ function EditorContent() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // 폴백: 일반 텍스트로 복사
       const text = title + '\n\n' + editorRef.current.getText();
       await navigator.clipboard.writeText(text);
       showSuccess('클립보드에 복사되었습니다');
@@ -284,123 +269,22 @@ function EditorContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* 헤더 */}
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={() => router.push('/')}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          <div className="flex items-center gap-1 sm:gap-3">
-            {/* 자동 저장 상태 표시 */}
-            {isAutoSaving ? (
-              <span className="text-xs text-gray-400 flex items-center gap-1">
-                <LoadingSpinner size="sm" />
-                저장 중...
-              </span>
-            ) : lastSaved ? (
-              <span className="text-xs text-gray-400">
-                {hasUnsavedChanges ? '저장되지 않은 변경' : `저장됨 ${lastSaved.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`}
-              </span>
-            ) : null}
-
-            {(saving || loading) && <LoadingSpinner size="sm" />}
-
-            {/* 맞춤법 검사 */}
-            <SpellChecker
-              getText={() => editorRef.current?.getText() || ''}
-              onReplace={(original, replacement) => {
-                if (editorRef.current) {
-                  const html = editorRef.current.getHTML();
-                  const newHtml = html.replace(new RegExp(original, 'g'), replacement);
-                  editorRef.current.setContent(newHtml);
-                }
-              }}
-            />
-
-            <Button
-              variant="ghost"
-              onClick={handleCopy}
-              title="복사"
-            >
-              {copied ? (
-                <span className="flex items-center gap-1 text-green-600">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="hidden sm:inline">복사됨</span>
-                </span>
-              ) : (
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <span className="hidden sm:inline">복사</span>
-                </span>
-              )}
-            </Button>
-
-            {/* 내보내기 메뉴 */}
-            <div className="relative hidden sm:block">
-              <Button
-                variant="ghost"
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                title="내보내기"
-              >
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  <span className="hidden md:inline">내보내기</span>
-                </span>
-              </Button>
-              {showExportMenu && (
-                <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                  <button
-                    onClick={() => handleExport('md')}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    Markdown (.md)
-                  </button>
-                  <button
-                    onClick={() => handleExport('html')}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    HTML (.html)
-                  </button>
-                  <button
-                    onClick={() => handleExport('json')}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    JSON (.json)
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <Button
-              variant="secondary"
-              onClick={() => handleSave('draft')}
-              disabled={saving || loading}
-            >
-              <span className="hidden sm:inline">임시저장</span>
-              <span className="sm:hidden">저장</span>
-            </Button>
-            <Button
-              onClick={() => handleSave('published')}
-              disabled={saving || loading}
-            >
-              <span className="hidden sm:inline">발행하기</span>
-              <span className="sm:hidden">발행</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <EditorHeader
+        onClose={() => router.push('/')}
+        isAutoSaving={isAutoSaving}
+        lastSaved={lastSaved}
+        hasUnsavedChanges={hasUnsavedChanges}
+        saving={saving}
+        loading={loading}
+        editorRef={editorRef}
+        copied={copied}
+        onCopy={handleCopy}
+        onSaveDraft={() => handleSave('draft')}
+        onPublish={() => handleSave('published')}
+        onExport={handleExport}
+        showExportMenu={showExportMenu}
+        onToggleExportMenu={() => setShowExportMenu(!showExportMenu)}
+      />
 
       {/* 에디터 영역 */}
       <main className="max-w-4xl mx-auto px-4 py-12">
@@ -410,22 +294,11 @@ function EditorContent() {
           </div>
         )}
 
-        {/* 인사이트 연결 표시 */}
         {linkedInsightId && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-            <div className="flex items-center gap-2 text-sm text-blue-700">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <span>인사이트에서 시작됨</span>
-              <Link href="/insights" className="ml-auto text-blue-600 hover:underline">
-                인사이트 보기
-              </Link>
-            </div>
-            {insightSummary && (
-              <p className="mt-2 text-sm text-blue-600 line-clamp-2">{insightSummary}</p>
-            )}
-          </div>
+          <EditorInsightBanner
+            linkedInsightId={linkedInsightId}
+            insightSummary={insightSummary}
+          />
         )}
 
         <TitleInput
