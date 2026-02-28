@@ -1,13 +1,13 @@
-# X Article Editor — CC/CX 파일 담당
+# X Article Editor — CC/CX File Ownership
 
-| 영역 | 파일/디렉토리 | 담당 | 근거 |
-|------|-------------|:----:|------|
-| API 라우트 | src/app/api/** | CC | 서버 로직, 보안 |
-| DB 레이어 | src/lib/supabase/* | CC | 스키마 연동, RLS |
-| 타입 정의 | src/types/* | CC | 공유 인터페이스 |
-| 에디터 코어 | src/lib/tiptap/* | CC | TipTap 확장, 복잡 |
-| UI 컴포넌트 | src/components/** | CX | 패턴 반복 |
-| 커스텀 훅 | src/hooks/* | CX | 단일 파일 |
-| 유틸리티 | src/lib/utils/* | CX | 독립 모듈 |
-| 페이지 | src/app/**/page.tsx | CX | UI 중심 |
-| 환경 설정 | .env* | 수동 | — |
+| Domain | File/Directory | Owner | Rationale |
+|--------|---------------|:-----:|-----------|
+| API Routes | src/app/api/** | CC | Server logic, security |
+| DB Layer | src/lib/supabase/* | CC | Schema integration, RLS |
+| Type Definitions | src/types/* | CC | Shared interfaces |
+| Editor Core | src/lib/tiptap/* | CC | TipTap extensions, complex |
+| UI Components | src/components/** | CX | Repetitive patterns |
+| Custom Hooks | src/hooks/* | CX | Single files |
+| Utilities | src/lib/utils/* | CX | Independent modules |
+| Pages | src/app/**/page.tsx | CX | UI-centric |
+| Environment Config | .env* | Manual | — |

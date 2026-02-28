@@ -1,60 +1,60 @@
-# X Article Editor - 프로젝트 완료
+# X Article Editor - Project Complete
 
-## 전체 기능 완성! ✅
+## All Features Complete! ✅
 
-### 1단계: 기본 에디터 (완료)
-| 작업 | 상태 |
-|------|------|
-| 프로젝트 초기 설정 | ✅ |
-| Tiptap 에디터 구현 | ✅ |
-| 이미지 붙여넣기 | ✅ |
-| UI 컴포넌트 | ✅ |
-| 페이지 구현 | ✅ |
-| Supabase 연동 | ✅ |
+### Phase 1: Basic Editor (Complete)
+| Task | Status |
+|------|--------|
+| Project initial setup | ✅ |
+| Tiptap editor implementation | ✅ |
+| Image paste | ✅ |
+| UI components | ✅ |
+| Page implementation | ✅ |
+| Supabase integration | ✅ |
 
-### 2단계: 서식 및 통계 (완료)
-| 작업 | 상태 |
-|------|------|
-| 서식 보완 (P, H3, 취소선) | ✅ |
-| 글자 수 + 읽기 시간 | ✅ |
-| 글자 크기 조정 | ✅ |
-| 자동 저장 기능 | ✅ |
+### Phase 2: Formatting & Statistics (Complete)
+| Task | Status |
+|------|--------|
+| Formatting enhancements (P, H3, Strikethrough) | ✅ |
+| Character count + reading time | ✅ |
+| Font size adjustment | ✅ |
+| Auto-save feature | ✅ |
 
-### 3단계: 관리 기능 (완료)
-| 작업 | 상태 |
-|------|------|
-| 삭제 기능 | ✅ |
-| 검색 기능 | ✅ |
-| 이탈 경고 | ✅ |
-| 태그 기능 | ✅ |
-| 파일 내보내기 | ✅ |
-| 에디터 설정 | ✅ |
+### Phase 3: Management Features (Complete)
+| Task | Status |
+|------|--------|
+| Delete feature | ✅ |
+| Search feature | ✅ |
+| Navigation away warning | ✅ |
+| Tag feature | ✅ |
+| File export | ✅ |
+| Editor settings | ✅ |
 
-### 4단계: 고급 기능 (완료)
-| 작업 | 상태 |
-|------|------|
-| 다크 모드 | ✅ |
-| 키보드 단축키 | ✅ |
-| 모바일 UI 최적화 | ✅ |
-| 글쓰기 목표 | ✅ |
-| 글쓰기 통계 (대시보드) | ✅ |
-| 맞춤법 검사 | ✅ |
-| 버전 히스토리 | ✅ |
-| 휴지통 (7일 보관) | ✅ |
-| AI 글쓰기 도우미 | ✅ |
+### Phase 4: Advanced Features (Complete)
+| Task | Status |
+|------|--------|
+| Dark mode | ✅ |
+| Keyboard shortcuts | ✅ |
+| Mobile UI optimization | ✅ |
+| Writing goals | ✅ |
+| Writing statistics (dashboard) | ✅ |
+| Spell check | ✅ |
+| Version history | ✅ |
+| Trash (7-day retention) | ✅ |
+| AI writing assistant | ✅ |
 
 ---
 
-## 접속 정보
+## Access Information
 
-- **개발 서버**: http://localhost:3000
+- **Dev server**: http://localhost:3000
 - **Supabase**: https://hgygyilcrkygnvaquvko.supabase.co
 - **GitHub**: https://github.com/clusteruni-debug/article-editor
 
 ---
 
-## 다음 단계
+## Next Steps
 
-자세한 로드맵은 `CHANGELOG.md` 참고
+See `CHANGELOG.md` for detailed roadmap
 
-**권장**: 2-3주간 실제 사용하면서 필요한 기능 발견하기
+**Recommended**: Use for 2-3 weeks to discover needed features through actual usage
