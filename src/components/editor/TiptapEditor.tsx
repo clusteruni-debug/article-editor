@@ -7,13 +7,17 @@ import { ImageUploadExtension, ImageUploadFn } from '@/lib/tiptap/imageUploadPlu
 import { EditorToolbar } from './EditorToolbar';
 import { EditorSettings } from './EditorSettings';
 import { EditorStats } from './EditorStats';
+import { SelectionCapture } from './SelectionCapture';
 import { uploadImage } from '@/lib/supabase/storage';
+import { InsightInsert } from '@/types/insight';
 
 interface TiptapEditorProps {
   content?: JSONContent;
   onUpdate: (content: JSONContent) => void;
   articleId: string;
   title?: string;
+  tags?: string[];
+  onSaveInsight?: (data: InsightInsert) => Promise<boolean>;
 }
 
 export interface TiptapEditorRef {
@@ -24,7 +28,7 @@ export interface TiptapEditorRef {
 }
 
 export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
-  ({ content, onUpdate, articleId, title = '' }, ref) => {
+  ({ content, onUpdate, articleId, title = '', tags, onSaveInsight }, ref) => {
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -100,7 +104,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
     }, [editor, content, contentLoaded]);
 
     return (
-      <div className="article-editor">
+      <div className="article-editor relative">
         <EditorToolbar
           editor={editor}
           onToggleSettings={() => setShowSettings(prev => !prev)}
@@ -129,6 +133,14 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
         )}
 
         <EditorContent editor={editor} />
+
+        {editor && onSaveInsight && (
+          <SelectionCapture
+            editor={editor}
+            tags={tags}
+            onSaveInsight={onSaveInsight}
+          />
+        )}
 
         <EditorStats editor={editor} title={title} />
       </div>

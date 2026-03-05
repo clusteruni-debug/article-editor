@@ -11,9 +11,11 @@ import { VersionHistory } from '@/components/editor/VersionHistory';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useArticle } from '@/hooks/useArticle';
+import { useInsight } from '@/hooks/useInsight';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { exportAsJSON, exportAsMarkdown, exportAsHTML } from '@/lib/utils/export';
+import { RelatedContentSidebar } from '@/components/editor/RelatedContentSidebar';
 
 export default function EditArticlePage() {
   const router = useRouter();
@@ -22,6 +24,7 @@ export default function EditArticlePage() {
   const editorRef = useRef<TiptapEditorRef>(null);
 
   const { getArticle, updateArticle, loading, error } = useArticle();
+  const { createInsight } = useInsight();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState<JSONContent>({ type: 'doc', content: [] });
@@ -30,6 +33,7 @@ export default function EditArticlePage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showRelated, setShowRelated] = useState(false);
 
   function extractTextContent(json: JSONContent): string {
     let text = '';
@@ -100,6 +104,13 @@ export default function EditArticlePage() {
         }
       },
       description: '발행',
+    },
+    {
+      key: 'r',
+      ctrl: true,
+      shift: true,
+      handler: () => setShowRelated((prev) => !prev),
+      description: '관련 콘텐츠',
     },
     {
       key: ',',
@@ -285,6 +296,20 @@ export default function EditArticlePage() {
               )}
             </Button>
 
+            {/* 관련 콘텐츠 토글 */}
+            <Button
+              variant="ghost"
+              onClick={() => setShowRelated((prev) => !prev)}
+              title="관련 콘텐츠 (Ctrl+Shift+R)"
+            >
+              <span className={`flex items-center gap-1 ${showRelated ? 'text-blue-600' : ''}`}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <span className="hidden sm:inline">관련</span>
+              </span>
+            </Button>
+
             {/* 내보내기 메뉴 */}
             <div className="relative hidden sm:block">
               <Button
@@ -342,6 +367,14 @@ export default function EditArticlePage() {
         </div>
       </header>
 
+      {/* 관련 콘텐츠 사이드바 */}
+      <RelatedContentSidebar
+        tags={tags}
+        articleId={articleId}
+        isOpen={showRelated}
+        onClose={() => setShowRelated(false)}
+      />
+
       {/* 에디터 영역 */}
       <main className="max-w-4xl mx-auto px-4 py-12">
         {error && (
@@ -371,6 +404,11 @@ export default function EditArticlePage() {
             onUpdate={setContent}
             articleId={articleId}
             title={title}
+            tags={tags}
+            onSaveInsight={async (data) => {
+              const result = await createInsight(data);
+              return !!result;
+            }}
           />
         </div>
 

@@ -10,6 +10,7 @@ import {
   PLATFORM_LABELS,
   Platform,
 } from '@/types/insight';
+import { InsightRelatedArticles } from './InsightRelatedArticles';
 
 interface InsightCardProps {
   insight: InsightWithArticle;
@@ -247,6 +248,11 @@ export function InsightCard({
           </button>
         </div>
       </div>
+
+      {/* 관련 글 */}
+      {insight.tags && insight.tags.length > 0 && (
+        <InsightRelatedArticles tags={insight.tags} />
+      )}
     </div>
   );
 }

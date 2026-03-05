@@ -21,6 +21,8 @@ interface EditorHeaderProps {
   onExport: (format: 'json' | 'md' | 'html') => void;
   showExportMenu: boolean;
   onToggleExportMenu: () => void;
+  onToggleRelated?: () => void;
+  isRelatedOpen?: boolean;
 }
 
 export function EditorHeader({
@@ -38,6 +40,8 @@ export function EditorHeader({
   onExport,
   showExportMenu,
   onToggleExportMenu,
+  onToggleRelated,
+  isRelatedOpen,
 }: EditorHeaderProps) {
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-100">
@@ -99,6 +103,22 @@ export function EditorHeader({
               </span>
             )}
           </Button>
+
+          {/* 관련 콘텐츠 토글 */}
+          {onToggleRelated && (
+            <Button
+              variant="ghost"
+              onClick={onToggleRelated}
+              title="관련 콘텐츠 (Ctrl+Shift+R)"
+            >
+              <span className={`flex items-center gap-1 ${isRelatedOpen ? 'text-blue-600' : ''}`}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <span className="hidden sm:inline">관련</span>
+              </span>
+            </Button>
+          )}
 
           {/* 내보내기 메뉴 */}
           <ExportMenu

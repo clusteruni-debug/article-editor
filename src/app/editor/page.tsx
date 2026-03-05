@@ -15,12 +15,13 @@ import { useInsight } from '@/hooks/useInsight';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { exportAsJSON, exportAsMarkdown, exportAsHTML } from '@/lib/utils/export';
 import { EditorHeader, EditorInsightBanner } from './components';
+import { RelatedContentSidebar } from '@/components/editor/RelatedContentSidebar';
 
 function EditorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { createArticle, updateArticle, loading, error } = useArticle();
-  const { linkArticle } = useInsight();
+  const { linkArticle, createInsight } = useInsight();
   const { success: showSuccess, error: showError } = useToast();
   const editorRef = useRef<TiptapEditorRef>(null);
 
@@ -42,6 +43,7 @@ function EditorContent() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showRelated, setShowRelated] = useState(false);
 
   // 마크다운을 간단한 HTML로 변환
   function markdownToHtml(md: string): string {
@@ -251,6 +253,13 @@ function EditorContent() {
       description: '발행',
     },
     {
+      key: 'r',
+      ctrl: true,
+      shift: true,
+      handler: () => setShowRelated((prev) => !prev),
+      description: '관련 콘텐츠',
+    },
+    {
       key: ',',
       ctrl: true,
       handler: () => editorRef.current?.toggleSettings(),
@@ -284,6 +293,15 @@ function EditorContent() {
         onExport={handleExport}
         showExportMenu={showExportMenu}
         onToggleExportMenu={() => setShowExportMenu(!showExportMenu)}
+        onToggleRelated={() => setShowRelated((prev) => !prev)}
+        isRelatedOpen={showRelated}
+      />
+
+      {/* 관련 콘텐츠 사이드바 */}
+      <RelatedContentSidebar
+        tags={tags}
+        isOpen={showRelated}
+        onClose={() => setShowRelated(false)}
       />
 
       {/* 에디터 영역 */}
@@ -322,6 +340,11 @@ function EditorContent() {
             onUpdate={setContent}
             articleId={articleId}
             title={title}
+            tags={tags}
+            onSaveInsight={async (data) => {
+              const result = await createInsight(data);
+              return !!result;
+            }}
           />
         </div>
 

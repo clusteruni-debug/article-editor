@@ -24,6 +24,7 @@ import {
   InsightFilters,
   InsightDateGroupList,
 } from './components';
+import { StaleInsightsReminder } from '@/components/insight/StaleInsightsReminder';
 
 // 날짜별 그룹 타입
 interface DateGroup {
@@ -325,6 +326,21 @@ export default function InsightsPage() {
 
       {/* 인사이트 목록 */}
       <main className="max-w-6xl mx-auto">
+        {!hasActiveFilters && (
+          <div className="px-4 pt-4">
+            <StaleInsightsReminder
+              insights={insights}
+              onStartArticle={handleStartArticle}
+              onMarkObserved={async (id) => {
+                const result = await updateInsight(id, { status: 'idea' });
+                if (result) {
+                  showSuccess('상태가 업데이트되었습니다');
+                  loadInsights();
+                }
+              }}
+            />
+          </div>
+        )}
         <InsightDateGroupList
           loading={loading}
           insights={insights}

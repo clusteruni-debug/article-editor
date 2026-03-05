@@ -7,7 +7,11 @@ import { useToast } from '@/components/ui/Toast';
 import { useArticle } from '@/hooks/useArticle';
 import { PaginatedResult } from '@/hooks/useArticle';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useInsight } from '@/hooks/useInsight';
 import { HomeHeader, HomeArticleList } from './components';
+import { QuickCaptureBar } from '@/components/insight/QuickCaptureBar';
+import { StaleInsightsReminder } from '@/components/insight/StaleInsightsReminder';
+import { InsightWithArticle } from '@/types/insight';
 
 const PAGE_SIZE = 10;
 
@@ -32,6 +36,7 @@ export default function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { getArticlesPaginated, getStatusCounts, getAllTags, deleteArticle, loading } = useArticle();
+  const { createInsight, getInsights, updateStatus, loading: insightLoading } = useInsight();
   const { success: showSuccess, error: showError } = useToast();
 
   // URL 파라미터에서 초기값 복원
@@ -63,6 +68,7 @@ export default function HomePage() {
   const [allTags, setAllTags] = useState<string[]>([]);
   const [statusCounts, setStatusCounts] = useState({ total: 0, draft: 0, published: 0 });
   const [allArticlesForRecycle, setAllArticlesForRecycle] = useState<Article[]>([]);
+  const [allInsights, setAllInsights] = useState<InsightWithArticle[]>([]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,11 +125,12 @@ export default function HomePage() {
     loadArticles();
   }, [loadArticles]);
 
-  // 태그 목록 + 상태별 카운트 (한 번만)
+  // 태그 목록 + 상태별 카운트 + 인사이트 (한 번만)
   useEffect(() => {
     getAllTags().then(setAllTags);
     getStatusCounts().then(setStatusCounts);
-  }, [getAllTags, getStatusCounts]);
+    getInsights().then(setAllInsights);
+  }, [getAllTags, getStatusCounts, getInsights]);
 
   // RecycleSuggestions용
   useEffect(() => {
@@ -174,6 +181,37 @@ export default function HomePage() {
     setCurrentPage(1);
   };
 
+  const handleStartArticleFromInsight = (insight: InsightWithArticle) => {
+    const params = new URLSearchParams();
+    params.set('insightId', insight.id);
+    params.set('keyword', insight.keyword);
+    if (insight.summary) params.set('summary', insight.summary);
+    router.push(`/editor?${params.toString()}`);
+  };
+
+  const handleMarkObserved = async (id: string) => {
+    const success = await updateStatus(id, 'idea');
+    if (success) {
+      showSuccess('상태가 업데이트되었습니다');
+      getInsights().then(setAllInsights);
+    }
+  };
+
+  const handleQuickCapture = async (data: { keyword: string; action_type: import('@/types/insight').ActionType; tags: string[] }) => {
+    const created = await createInsight({
+      keyword: data.keyword,
+      action_type: data.action_type,
+      tags: data.tags,
+      status: 'idea',
+    });
+    if (created) {
+      showSuccess('인사이트가 저장되었습니다');
+      return true;
+    }
+    showError('인사이트 저장에 실패했습니다');
+    return false;
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <HomeHeader
@@ -191,6 +229,15 @@ export default function HomePage() {
         selectedTag={selectedTag}
         onTagChange={handleTagChange}
       />
+
+      <div className="max-w-6xl mx-auto px-4 pt-4 space-y-0">
+        <QuickCaptureBar onCapture={handleQuickCapture} isLoading={insightLoading} />
+        <StaleInsightsReminder
+          insights={allInsights}
+          onStartArticle={handleStartArticleFromInsight}
+          onMarkObserved={handleMarkObserved}
+        />
+      </div>
 
       <HomeArticleList
         loading={loading}
