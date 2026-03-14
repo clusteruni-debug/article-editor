@@ -6,7 +6,7 @@ Next.js + TypeScript + Supabase + TipTap Editor
 ## Running
 ```bash
 npm install
-npm run dev     # http://localhost:3000
+npm run dev     # http://localhost:3010
 ```
 
 ## Deployment
